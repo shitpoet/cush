@@ -40,7 +40,7 @@ include('ext/pseudos')
 function StlParser() {
   let newRule = (parent) => ({
     parent,
-    sels: {},
+    sels: [],
     decls: {},
     failbacks: {},
     childs: [],
@@ -100,11 +100,15 @@ function StlParser() {
     return decls
   }*/
 
-  function scanPseudo(s) {
+  function scanPseudo(rule, s) {
     s.skip(':')
     let str = s.id()
-    while (s.s=='(' || s.s==')' || isId(s.t) || isInt(s.t)) {
-      str += s.shift().s
+    if (extPseudos[str]) {
+      str = extPseudos[str](rule, str)
+    } else {
+      while (s.s=='(' || s.s==')' || isId(s.t) || isInt(s.t)) {
+        str += s.shift().s
+      }
     }
     //log('ps',str)
     return str
@@ -129,7 +133,7 @@ function StlParser() {
       }
     }
     while (s.s==':') {
-      sel.pseudos.push( scanPseudo(s) )
+      sel.pseudos.push( scanPseudo(rule, s) )
     }
     return sel
   }
@@ -153,20 +157,38 @@ function StlParser() {
     return sels
   }
 
+  function parseProp(rule, s) {
+    let name = s.id()
+    //{name,prop} = preprocessProp(rule, name)
+    let alias = propAliases[name]
+    if (alias) return alias
+    let prop = knownProps[name]
+    if (prop) return prop
+    throw new s.error(`unknown property ${name}`)
+  }
+
   function parseDecl(rule, s) {
     s.skipWs()
     if (isId(s.t)) {
-      let name = s.id()
-      s.trySkip(':')
-      s.skipSp()
-      let value = ''
-      while (s.t && !isNl(s.t) && s.s!=';') {
-        value += s.shift().s
+      if (declAliases[s.s]) {
+        let declStr = declAliases[s.id()]
+        let [name, value] = declStr.split(/[:\s]\s*/)
+        s.skipWs()
+        return {name, value}
+      } else {
+        let prop = parseProp(rule, s)
+        let name = prop.name
+        s.trySkip(':')
+        s.skipSp()
+        let value = ''
+        while (s.t && !isNl(s.t) && s.s!=';') {
+          value += s.shift().s
+        }
+        value = value.trim()
+        s.trySkip(';')
+        s.skipWs()
+        return {name, value}
       }
-      value = value.trim()
-      s.trySkip(';')
-      s.skipWs()
-      return {name, value}
     } else {
       throw s.error('bad decl')
     }
@@ -209,13 +231,14 @@ function StlParser() {
   }
 
   function parseRule(parent, s) {
+    //log('new rule with parent ',parent)
     var rule = newRule(parent)
-    rule.sels = parseSels(parent, s)
+    rule.sels = parseSels(rule, s)
     s.skip('{')
     //s.skipWs()
-    rule.decls = parseDecls(parent, s)
+    rule.decls = parseDecls(rule, s)
     //s.skipWs()
-    rule.childs = parseNestedRules(parent, s)
+    rule.childs = parseNestedRules(rule, s)
     //s.skipWs()
     s.skip('}')
     return rule

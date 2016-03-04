@@ -7,3 +7,6 @@
 node_modules/
 .eslint*
 *test*
+m1.js
+m2.js
+m3.js

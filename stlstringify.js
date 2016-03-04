@@ -12,10 +12,17 @@ function stringifyRule(prefix, ast, out, scope, depth) {
     return str
   }
 
-  function writeSels(sels, ruleDepth) {
+  function writeSels(rule, ruleDepth) {
+    //log(rule.sels)
+    if (rule.parent) {
+      writeSels(rule.parent, ruleDepth)
+    }
+    let sels = rule.sels
     let n = sels.length
     let selStrs = sels.map(selToString)
-    out.write(selStrs.join(', '), ruleDepth)
+    if (selStrs.length > 0) {
+      out.write(selStrs.join(', ')+' ', ruleDepth)
+    }
   }
 
   var ruleDepth = 0
@@ -30,23 +37,13 @@ function stringifyRule(prefix, ast, out, scope, depth) {
 
     var ismq = false
     if (ast.sels && ast.sels.length > 0) {
-      writeSels(ast.sels, ruleDepth)
+      writeSels(ast, ruleDepth)
       out.write(' {', ruleDepth)
       out.nl()
-      /*if (ast.decls.failbacks) {
-        for (var propName in ast.decls.failbacks) {
-          var propValue = ast.decls.failbacks[propName]
-          out.write(propName+': '+propValue+';', propDepth)
-          out.write(' /* failback *//*')
-          out.nl()
-        }
-      }*/
-      for (var propName in ast.decls) {
-        //if (propName != 'failbacks') {
-          var propValue = ast.decls[propName].value
-          out.write(propName+': '+propValue+';', propDepth)
-          out.nl()
-        //}
+      for (let name in ast.decls) {
+        let value = ast.decls[name].value
+        out.write(name+': '+value+';', propDepth)
+        out.nl()
       }
     }
     if (ast.sels && ast.sels.length > 0) {
