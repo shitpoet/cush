@@ -1,0 +1,9 @@
+*_
+*~
+*.txt
+*.tpl
+*.stl
+*.sh
+node_modules/
+.eslint*
+*test*
