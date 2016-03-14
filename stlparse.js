@@ -1,4 +1,3 @@
-"use strict";
 /*
 
   style sheet parser
@@ -11,7 +10,7 @@
     parent - reference
 
     sels - array of selectors:
-      selector = {
+      {
         tag: reference to tag descriptor
         id: string
         classes: array of strings
@@ -37,7 +36,7 @@ include('css')
 
 include('ext/pseudos')
 
-function StlParser() {
+export function StlParser() {
   let newRule = (parent) => ({
     parent,
     sels: [],
@@ -102,7 +101,9 @@ function StlParser() {
 
   function scanPseudo(rule, s) {
     s.skip(':')
-    let str = s.id()
+    let str = ''
+    if (s.trySkip(':')) str = ':' // 2nd `:`
+    str += s.id()
     if (extPseudos[str]) {
       str = extPseudos[str](rule, str)
     } else {
@@ -116,8 +117,8 @@ function StlParser() {
 
   function parseSel(rule, s) {
     let sel = newSel()
-    if (isId(s.t)) {
-      let id = s.id()
+    if (s.s==='*' || isId(s.t)) {
+      let id = s.shift().s
       if (knownTags[id]) {
         sel.tag = knownTags[id]
       } else {
@@ -134,6 +135,10 @@ function StlParser() {
     }
     while (s.s==':') {
       sel.pseudos.push( scanPseudo(rule, s) )
+      //log(sel.pseudos,s.s,s.s==':')
+    }
+    if (!sel.tag && !sel.id && sel.classes.length===0) {
+      throw s.error('cant parse selector staring with `'+s.s+'`')
     }
     return sel
   }
@@ -144,12 +149,10 @@ function StlParser() {
     while (s.t && s.s!='{') {
       let sel = parseSel(parent, s)
       s.skipSp()
-      if (sel) {
-        sels.push(sel)
-        if (s.trySkip(',')) {
-          s.skipWs()
-          continue
-        }
+      sels.push(sel)
+      if (s.trySkip(',')) {
+        s.skipWs()
+        continue
       }
       break
     }
@@ -181,7 +184,13 @@ function StlParser() {
         s.trySkip(':')
         s.skipSp()
         let value = ''
-        while (s.t && !isNl(s.t) && s.s!=';') {
+        let lastSym = ' '
+        while (
+          s.t &&
+          ( !isNl(s.t) || lastSym==',' ) &&
+          s.s!=';' && s.s!='}'
+        ) {
+          lastSym = s.t.line.lastSym
           value += s.shift().s
         }
         value = value.trim()
@@ -226,7 +235,6 @@ function StlParser() {
         throw s.error('nested rule expected')
       }
     }
-    //todo: assert for no } for non-root rules here
     return childs
   }
 
@@ -234,13 +242,19 @@ function StlParser() {
     //log('new rule with parent ',parent)
     var rule = newRule(parent)
     rule.sels = parseSels(rule, s)
-    s.skip('{')
-    //s.skipWs()
-    rule.decls = parseDecls(rule, s)
-    //s.skipWs()
-    rule.childs = parseNestedRules(rule, s)
-    //s.skipWs()
-    s.skip('}')
+    s.skipSp()
+    if (s.s!='{') { // parse jux selectors as subrules
+      pushChilds(rule.childs, parseRule(rule, s))
+    } else {
+      s.t.line.obs--
+      s.skip('{')
+      //s.skipWs()
+      rule.decls = parseDecls(rule, s)
+      //s.skipWs()
+      rule.childs = parseNestedRules(rule, s)
+      //s.skipWs()
+      s.skip('}')
+    }
     return rule
   }
 

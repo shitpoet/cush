@@ -1,4 +1,4 @@
-var extPseudos = {}
+export let extPseudos = {}
 
 function pseudo_first(rule, str) {
   return 'first-child'

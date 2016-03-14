@@ -22,7 +22,7 @@ var baseArgTypes = {
   '%': {}
 }
 
-var knownProps = {
+export let knownProps = {
   // a
   'align-items': {
     args: {
@@ -477,9 +477,9 @@ var knownProps = {
   }
 }
 
-var propAliases = {}
+export let propAliases = {}
 
-var declAliases = {
+export let declAliases = {
   abs: 'position: absolute',
   bold: 'font-weight: bold',
   block: 'display: block',

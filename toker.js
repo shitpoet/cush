@@ -57,7 +57,7 @@
 
 */
 
-"use strict";
+include('o')
 
 //var log = console.log.bind(console)
 /*var log = function() {
@@ -174,7 +174,7 @@ var tokenize = exports.tokenize = function(fn, str) {
   shift() // load ch,ch2,ch3
   sol = tt.sol
   while (ch!=eof && i < n) {
-    var t = {
+    var t = ({
       t: sol,
       s: '',
       ss: null,
@@ -184,7 +184,7 @@ var tokenize = exports.tokenize = function(fn, str) {
       line: line,
       prev: prevt,
       next: null
-    }
+    })
 
     var i0 = i
 

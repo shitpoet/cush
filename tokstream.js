@@ -2,7 +2,7 @@
 
 include('toks')
 
-var TokStream = function(toks) {
+export let TokStream = function(toks) {
   var self = this
   var n = toks.length
   var pos = 0
@@ -63,7 +63,7 @@ var TokStream = function(toks) {
     if (isId(self.t)) {
       return shift().s
     } else {
-      throw error('id expected')
+      throw error('id expected but '+ttToString(self.t.t)+' "'+self.s+'" saw')
     }
   }
 
@@ -72,9 +72,9 @@ var TokStream = function(toks) {
   }
 
   function formatMessage(message) {
-    var fn = this.t ? this.t.fn : t0 ? t0.fn : 'unknown'
-    var ln = this.t ? this.t.ln : t0 ? t0.ln+'(?)' : '???'
-    var line = this.t ? this.t.line.s : t0 ? t0.line.s : 'no source available'
+    var fn = self.t ? self.t.fn : t0 ? t0.fn : 'unknown'
+    var ln = self.t ? self.t.ln : t0 ? t0.ln+'(?)' : '???'
+    var line = self.t ? self.t.line.s : t0 ? t0.line.s : 'no source available'
     var fullMessage = fn+':'+ln+' '+message+'\n'
     //if (ln>0 && ln<=lines.length) {
       //var line = lines[ln-1]

@@ -17,7 +17,7 @@ var knownAttrs = {
 
 }
 
-var knownTags = {
+export let knownTags = {
   '*': {
     attrs: 'accesskey, class, hidden?, id, lang, title, tabindex, style, aria-label, aria-labelledby, aria-describedby, onclick onkeypress onkeyup onkeydown onmousewheel'
   },

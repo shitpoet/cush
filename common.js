@@ -6,8 +6,8 @@
 // accessible package-wise (?)
 var include = require('./include')
 
-var assert = console.assert.bind(console)
-var log = console.log.bind(console)
+export let assert = console.assert.bind(console)
+export let log = console.log.bind(console)
 
 /*function log_call() {
   var caller = log_call.caller

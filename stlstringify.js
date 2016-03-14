@@ -38,7 +38,7 @@ function stringifyRule(prefix, ast, out, scope, depth) {
     var ismq = false
     if (ast.sels && ast.sels.length > 0) {
       writeSels(ast, ruleDepth)
-      out.write(' {', ruleDepth)
+      out.write('{', ruleDepth)
       out.nl()
       for (let name in ast.decls) {
         let value = ast.decls[name].value
