@@ -13,7 +13,7 @@
   'font-family':{}
 }*/
 
-var baseArgTypes = {
+var base_arg_types = {
   len: {},
   num: {},
   color: {},
@@ -45,7 +45,8 @@ export let knownProps = {
   },
   background: {
     alias: 'bg',
-    hasColorArgs: true
+    //hasColorArgs: true
+    args: 'color'
   },
   'background-attachment': {
     alias: 'bga'
@@ -296,7 +297,8 @@ export let knownProps = {
     args: 'len'
   },
   'line-height': {
-    alias: 'lh'
+    alias: 'lh',
+    args: 'line-height'
   },
   'list-style': {
     alias: 'ls'
@@ -337,6 +339,9 @@ export let knownProps = {
     alias: 'mih'
   },
   // n
+  'object-fit': {
+
+  },
   opacity: {
     alias: 'opa'
   },
@@ -545,10 +550,11 @@ export let declAliases = {
     }
   }
 
+  // make `args` array
   for (var propName in props) {
     var prop = props[propName]
     prop.name = propName
-    if (prop.args) {
+    if ('args' in prop) {
       var args = prop.args
       // if one args make single element array
       if (typeof args == 'string') {
@@ -560,6 +566,8 @@ export let declAliases = {
       } else if (!Array.isArray(args)) {
         prop.args = [args]
       }
+    } else {
+      prop.args = []
     }
   }
 
@@ -613,7 +621,7 @@ export let declAliases = {
           }
           arg.aliases = enumAliases
           //log('aliasesd:',arg)
-        } else if (!baseArgTypes[arg.type]) {
+        } else if (!base_arg_types[arg.type]) {
           if (props[arg.type]) {
             var subprop = props[arg.type]
             if (subprop.args && subprop.args.length==1) {

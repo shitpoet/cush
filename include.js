@@ -34,12 +34,12 @@ let cache = new Map()
    them as `let name = function() {}`
 
 */
-function rewrite_simple(code, reload) {
+/*function rewrite_simple(code, reload) {
   code = code.replace(/^function\s+([a-zA-Z0-9_\-$]+)/gm, 'let $1 = function')
   if (reload) {
     code = code.replace(/^let\s/gm, '')
   }
-}
+}*/
 
 /*
    this func also wrappes module into a closure
@@ -170,22 +170,22 @@ function ttToString(mask) {
 //include('toks')
 
 var
-  isSp = t => t.t & 1,
-  isNl = t => t.t & 2,
-  isWs = t => t.t & 3,
-  isCmnt = t => t.t & 4,
-  isInt = t => t.t & 8,
-  //isFloat = t => t.t & 16,
-  isNum = t => t.t & 24,
-  isId = t => t.t & 32,
-  //isSig = t => t.t & 64,
-  //isSQStr = t => t.t & 128,
+  is_sp = t => t.t & 1,
+  is_nl = t => t.t & 2,
+  is_ws = t => t.t & 3,
+  is_cmnt = t => t.t & 4,
+  is_int = t => t.t & 8,
+  //is_float = t => t.t & 16,
+  is_num = t => t.t & 24,
+  is_id = t => t.t & 32,
+  //is_sig = t => t.t & 64,
+  //is_s_q_str = t => t.t & 128,
   //isDQStr = t => t.t & 128,
-  isQStr = t => t.t & 384,
-  isSym = t => t.t & 512,
-  isRaw = t => t.t & 1024,
-  isSOL = t => t.t & 16384,
-  isEnd = t => t==null
+  is_qstr = t => t.t & 384,
+  is_sym = t => t.t & 512,
+  is_raw = t => t.t & 1024,
+  is_sol = t => t.t & 16384,
+  is_end = t => t==null
 
 // these types of tokens are not recognized here:
 // tt.sig, tt.scmnt
@@ -292,7 +292,7 @@ var tokenize = function(fn, str) {
         shift()
         //break
       }
-      //t.s = isNl(t) ? '\n' : ' '
+      //t.s = is_nl(t) ? '\n' : ' '
       t.t |= wst
     } else if (ch=='`') { // template string
       sol = 0
@@ -377,21 +377,21 @@ var tokenize = function(fn, str) {
     }
 
     //if (t.t & !tt.flags) {
-      /*if (isWs(t)) { // try to collapse ws
-        if (isNl(t)) {
-          if (isSp(prevt)) {
+      /*if (is_ws(t)) { // try to collapse ws
+        if (is_nl(t)) {
+          if (is_sp(prevt)) {
             prevt.t = tt.nl
             prevt.s = '\n'
             continue
-          } else if (isNl(prevt)) {
+          } else if (is_nl(prevt)) {
             continue
           }
-        } else if (isSp(t)) {
-          if (isWs(prevt)) {
+        } else if (is_sp(t)) {
+          if (is_ws(prevt)) {
             continue
           }
         }
-        t.s = isNl(t) ? '\n' : ' '
+        t.s = is_nl(t) ? '\n' : ' '
       }*/
       t.len = i-t.pos
       prevt.next = t
@@ -417,93 +417,180 @@ function dumpTokens(toks) {
   }
 }
 
-function wrapModule(name, code) {
-  return '!function(exports_, require_, module_, __filename_, __dirname_){' + code + '}()'
+
+// nodejs signature for wrapper:
+//   fun exports, require, module, __filename, __dirname
+// now we dont use it at all
+function wrap_module(name, code, exports) {
+  code =
+    "'use strict';" + code + ';' +
+    exports.map(
+      (name) => ('global.'+name+'='+name)
+    ).join(';') +
+    ';function __eval_here(code) { return eval(code) }' +
+    ";global['__eval_"+name+"'] = __eval_here"
+  return '!function(){' + code + '}()'
 }
 
-function rewrite(moduleName, code, reload) {
-  //code = code.trim()
-  let toks = tokenize(moduleName, code)
-  //let toks = []
-  //log(code)
-  //dumpTokens(toks)
+function add_tok_patch(patches, tok, str) { patches.push({tok, str}) }
 
-  let patches = []
-  function patch_tok(tok, str) { patches.push(O({tok, str})) }
-  function apply_tok_patches() {
-    //patches.sort( (a,b)=>(a.pos<b.pos?-1:(a.pos>b.pos?1:0)) )
-    patches.sort( (a,b)=>(a.tok.pos<b.tok.pos?-1:(a.tok.pos>b.tok.pos?1:0)) )
-    /*let n = patches.length
-    for (let i = n-1; i >= 0; i--) {
-      let patch = patches[i]*/
-    patches.reverse()
-    for (let patch of patches) {
-      let pos = patch.tok.pos
-      let len = patch.tok.len
-      let str = patch.str
-      //log(pos,len)
-      code =
-        code.substr(0,pos) +
-        str +
-        code.substr(pos+len)
-    }
-  }
-
-  // collect and patch imports
-  // only simple, non-aliasing imports are supported:
-  //   - import {name} from './filename.js'
-  //   - import {name1, name2} from 'dir/other-filename.js'
-  // these imports are converted to refs to globals:
-  //   - const   {name}  =    global
-  //   - const   {name1, name2}  =    global
+// collect and patch imports
+// only simple, non-aliasing imports are supported:
+//   - import {name} from './filename.js'
+//   - import {name1, name2} from 'dir/other-filename.js'
+// these imports are converted to refs to globals:
+//   - const   {name}  =    global
+//   - const   {name1, name2}  =    global
+function patch_imports(toks, patches) {
   for (let tok of toks) {
-    if (isId(tok) && tok.s=='import' && isSp(tok.next)) {
+    if (is_id(tok) && tok.s=='import' && is_sp(tok.next)) {
       if (tok.next.next.s == '{') {
         let nameTok = tok.next.next.next
         patch_tok(tok,'const')
         while (nameTok.next.s==',') {
           nameTok = nameTok.next.next
         }
-        patch_tok(nameTok.next.next.next, '=') // `from` -> `=`
-        patch_tok(nameTok.next.next.next.next.next, 'global') // fn -> global
+        add_tok_patch(patches, nameTok.next.next.next, '=') // `from` -> `=`
+        add_tok_patch(patches, nameTok.next.next.next.next.next, 'global') // fn -> global
       }
     }
   }
+}
 
-  // collect and patch exports
-
+// collect and patch exports
+// returns list of exported symbols
+function patch_exports(toks, patches) {
   let exports = []
-
   for (let tok of toks) {
-    if (isId(tok) && tok.s=='export' && isSp(tok.next)) {
+    if (is_id(tok) && tok.s=='export' && is_sp(tok.next)) {
       let kw = tok.next.next.s
       if (kw == 'var' || kw == 'let' || kw == 'function') {
         let name = tok.next.next.next.next.s
         exports.push( name )
-        patch_tok(tok, '')
-        patch_tok(tok.next, '')
+        add_tok_patch(patches, tok, '')
+        add_tok_patch(patches, tok.next, '')
       }
     }
   }
+  return exports
+}
 
-  //log(exports)
-
-  apply_tok_patches()
-
-  code = "'use strict';" + code
-  /*if (reload) {
-    code += ";global['__eval_"+moduleName+"_new'] = function(code) { return eval(code) }"
-  } else {
-    code += ";global['__eval_"+moduleName+"'] = function(code) { return eval(code) }"
-  }*/
-  code += ';' + exports.map( (name) => ('global.'+name+'='+name) ).join(';')
-  if (reload) {
-  code += ";function __eval_here(code) { 'reloaded'; return eval(code) }"
-  } else {
-  code += ";function __eval_here(code) { return eval(code) }"
+// replace `fun` with `function` %]
+function patch_fun(toks, patches) {
+  for (let tok of toks) {
+    if ( // check if it looks like a keyword....
+      is_id(tok) && tok.s=='fun' &&
+      (is_ws(tok.prev) || tok.prev.s=='(' || tok.prev.s=='!' ||
+      tok.prev.s == ';') &&
+      tok.prev.s != '.' && tok.prev.s != '[' &&
+      (is_ws(tok.next) || tok.next.s=='(')
+    ) {
+      add_tok_patch(patches, tok, 'function')
+    }
   }
-  code += ";global['__eval_"+moduleName+"'] = __eval_here"
-  return wrapModule(moduleName, code)
+}
+
+// add brackets around conditions (if,while,for)
+// also add `let` keyword after for if none is present
+function patch_ifs(toks, patches) {
+  for (let tok of toks) {
+    if (
+      (tok.s=='if' || tok.s=='while' || tok.s=='for') &&
+      (tok.next.next.s!='(')
+    ) {
+      let kw = tok.s
+      let tok2 = tok.next
+      let bs = 0, cbs = 0
+      while (tok2 && tok2.s!='{' && tok.ln==tok2.ln) {
+        let ch = tok2.s
+        if (ch=='(') bs++
+        if (ch==')') bs--
+        if (ch=='{') cbs++
+        if (ch=='}') cbs--
+        //log('tok2?',tok2.s)
+        tok2 = tok2.next
+      }
+      if (tok2 && bs==0 && cbs==0 && tok2.s=='{') {
+        //log('patch tok2',tok2.s)
+        let tok3 = tok2.next
+        let patch = true
+        while (tok3 && !is_nl(tok3) && tok3.s!=';') {
+          if (!is_ws(tok3)) {
+            patch = false
+            break
+          }
+          tok3 = tok3.next
+        }
+        if (patch) {
+          if (kw=='for' && tok.next.next.s!='let') {
+            add_tok_patch(patches, tok, 'for (let ')
+          } else {
+            add_tok_patch(patches, tok, kw+'(')
+          }
+          add_tok_patch(patches, tok2, '){')
+        }
+      }
+    }
+  }
+}
+
+// make sealed object literals throwing on missing property
+function patch_seals(toks, patches) {
+  for (let tok of toks) {
+    if ( // `seal({`
+      is_id(tok) && tok.s=='seal' &&
+      tok.next.s=='(' &&
+      tok.next.next.s=='{'
+    ) {
+      add_tok_patch(patches, tok.next.next, '{__proto__:Throwing,')
+    }
+  }
+}
+
+global.total_patches = 0
+
+function apply_tok_patches(code, patches) {
+  patches.sort( (a,b)=>(a.tok.pos<b.tok.pos?-1:(a.tok.pos>b.tok.pos?1:0)) )
+
+  let n = patches.length
+  global.total_patches += n
+  let patched = ''
+  let prev = 0
+  for (let i = 0; i < n; i++) {
+    let patch = patches[i]
+    let pos = patch.tok.pos
+    let len = patch.tok.len
+    let str = patch.str
+    patched += code.substr(prev, pos-prev) + str
+    prev = pos+len
+  }
+  patched += code.substr(prev)
+  /*for (let i = n-1; i >= 0; i--) {
+    let patch = patches[i]
+    let pos = patch.tok.pos
+    let len = patch.tok.len
+    let str = patch.str
+    code =
+      code.substr(0,pos) +
+      str +
+      code.substr(pos+len)
+  }*/
+  return patched
+}
+
+function rewrite(moduleName, code, reload) {
+  //code = code.trim()
+  let toks = tokenize(moduleName, code)
+  //log(code)
+  //dumpTokens(toks)
+  let patches = []
+  patch_fun(toks, patches)
+  patch_ifs(toks, patches)
+  patch_imports(toks, patches)
+  let exports = patch_exports(toks, patches)
+  patch_seals(toks, patches)
+  code = apply_tok_patches(code, patches)
+  return wrap_module(moduleName, code, exports)
 }
 
 /*function rewrite_strict2(moduleName, code, reload) {

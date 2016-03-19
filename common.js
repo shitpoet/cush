@@ -1,5 +1,7 @@
 "use strict"
 
+export let util = require('util')
+
 // make include function accessible to included modules
 // without explicit call to require
 // it works because all vars from included modules are

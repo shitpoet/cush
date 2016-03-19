@@ -52,15 +52,19 @@ export let TokStream = function(toks) {
   }
 
   this.skipSp = function() {
-    while (self.t && isSp(self.t)) shift()
+    while (self.t && is_sp(self.t)) shift()
   }
 
   this.skipWs = function() {
-    while (self.t && isWs(self.t)) shift()
+    while (self.t && is_ws(self.t)) shift()
+  }
+
+  this.skipCmnt = function() {
+    while (self.t && is_cmnt(self.t)) shift()
   }
 
   this.id = function() {
-    if (isId(self.t)) {
+    if (is_id(self.t)) {
       return shift().s
     } else {
       throw error('id expected but '+ttToString(self.t.t)+' "'+self.s+'" saw')
@@ -68,7 +72,13 @@ export let TokStream = function(toks) {
   }
 
   this.atLineStart = function() {
-    return isSOL(this.t)
+    return is_sol(this.t)
+  }
+
+  this.until = function(s) {
+    let str = ''
+    while (self.t && self.t.s != s) str += shift().s
+    return str
   }
 
   function formatMessage(message) {

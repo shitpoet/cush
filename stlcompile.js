@@ -1,10 +1,9 @@
-"use strict"
 /* compile ast to js code */
 
 include('stlstringify')
 include('outstream')
 
-function compileStyle(ast) {
+export function compileStyle(ast) {
   return function(vars) {
     log('stringify stl ---------------------')
     var out = new OutStream()

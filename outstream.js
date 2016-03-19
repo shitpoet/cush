@@ -1,4 +1,4 @@
-var OutStream = function() {
+export let OutStream = function() {
   var DEBUG = false
   var self = this
   var text = ''
