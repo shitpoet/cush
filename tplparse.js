@@ -16,12 +16,13 @@
 
 //var knownTags = require('./tags.js')
 
+
 include('tags')
 
-
-function TplParser() {
+export function TplParser() {
 
   function newNode(parent) {
+    //if (parent && parent.tag) log('new node with parent '+parent.tag.name)
     return {
       parent: parent,
       tag: null,
@@ -48,7 +49,7 @@ function TplParser() {
 
   var atOpeningTag = function(s) {
     return s.s=='<' && (
-      isId(s.t2) || s.s2=='.' || s.s2=='#'
+      is_id(s.t2) || s.s2=='.' || s.s2=='#'
     )
   }
 
@@ -63,15 +64,15 @@ function TplParser() {
     return (
       s.t.line.obs > 0 ||
       s.atLineStart() && (
-        isId(s.t) ||
-        s.s=='.' && isId(s.t2) ||
-        s.s=='#' && isId(s.t2)
+        is_id(s.t) ||
+        s.s=='.' && is_id(s.t2) ||
+        s.s=='#' && is_id(s.t2)
       )
     )
   }
 
   function scanAttrValue(attr, s) {
-    if (isQStr(s.t))
+    if (is_qstr(s.t))
       return s.shift().ss
     else
       return s.shift().s
@@ -127,7 +128,7 @@ function TplParser() {
     let node = newNode(parent, s)
     node.startTok = s.t
     var tagName
-    if (isId(s.t)) {
+    if (is_id(s.t)) {
       tagName = s.id()
       if (!knownTags[tagName]) {
         node.classes.push( tagName )
@@ -135,7 +136,7 @@ function TplParser() {
       }
     }
     while (s.s=='.' || s.s=='#') {
-      if (!isId(s.t2)) throw s.error('bad tag declaration')
+      if (!is_id(s.t2)) throw s.error('bad tag declaration')
       if (s.trySkip('.')) {
         node.classes.push( s.id() )
         if (!tagName) tagName = 'div'
@@ -178,8 +179,11 @@ function TplParser() {
 
   function parseNormalTag(parent, s) {
     let node = parseOpeningTag(parent, s)
-    node.childs = parseChilds(node, s)
-    parseClosingTag(node, s)
+    let tag = node.tag
+    if (!tag.selfClosing) {
+      node.childs = parseChilds(node, s)
+      parseClosingTag(node, s)
+    }
     return node
   }
 
@@ -189,12 +193,12 @@ function TplParser() {
     if (s.t.line.obs > 0) {
       s.t.line.obs--
       s.skip('{')
-      node.childs = parseChilds(parent, s)
+      node.childs = parseChilds(node, s)
       node.endTok = s.t
       s.skip('}')
     } else {
       //log('short tag without block')
-      node.childs = parseChilds(parent, s, '\n')
+      node.childs = parseChilds(node, s, '\n')
       //pushChilds( node.childs, parseTextNode(parent, s) )
       //node.endTok = node.startTok.prev.prev
       node.wsBefore = tt.nl
@@ -242,7 +246,7 @@ function TplParser() {
     while (
       s.t && s.s!='}' && s.s!=until && !atClosingTag(s)
     ) {
-      if (isWs(s.t)) {
+      if (is_ws(s.t)) {
         s.skipWs()
       } else if (atShortTag(s)) {
         pushChilds( childs, parseShortTag(parent, s) )
@@ -269,8 +273,8 @@ function TplParser() {
           before = before.prev
         //log('before',before.s)
         if (before) {
-          if (isNl(before)) nlBefore = true
-          if (isSp(before)) spBefore = true
+          if (is_nl(before)) nlBefore = true
+          if (is_sp(before)) spBefore = true
         }
         //log('startTok',node.startTok.s)
       }
@@ -278,8 +282,8 @@ function TplParser() {
         let t = node.inTok
         //if (t.s=='>') t = t.next
         //if (t) {
-          if (isNl(t)) nlIn = true
-          if (isSp(t)) spIn = true
+          if (is_nl(t)) nlIn = true
+          if (is_sp(t)) spIn = true
         //}
       }
       if (node.outTok) {
@@ -287,16 +291,16 @@ function TplParser() {
         let t = node.outTok
         if (t.s=='<') t = t.prev
         if (t) {
-          if (isNl(t)) nlOut = true
-          if (isSp(t)) spOut = true
+          if (is_nl(t)) nlOut = true
+          if (is_sp(t)) spOut = true
         }
       }
       //log('nlIn spIn nlOut spOut', nlIn, spIn, nlOut, spOut)
       if (node.endTok) {
         let after = node.endTok.next
         if (after) {
-          if (isNl(after)) nlAfter = true
-          if (isSp(after)) spAfter = true
+          if (is_nl(after)) nlAfter = true
+          if (is_sp(after)) spAfter = true
         }
       }
       /*log(node.text,'nlBefore spBefore nlAfter spAfter', nlBefore, spBefore, nlAfter, spAfter)

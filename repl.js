@@ -1,5 +1,5 @@
-repl = require("repl")
-r = repl.start({useGlobal: true})
+let repl = require("repl")
+let r = repl.start({useGlobal: true})
 r.on('exit', function() { process.exit() });
 
 /*net.createServer(function (socket) {

@@ -19,7 +19,8 @@ var base_arg_types = {
   color: {},
   url: {},
   str: {},
-  '%': {}
+  '%': {},
+  any: {} //todo: avoid this
 }
 
 export let knownProps = {
@@ -46,7 +47,7 @@ export let knownProps = {
   background: {
     alias: 'bg',
     //hasColorArgs: true
-    args: 'color'
+    args: 'color any any'
   },
   'background-attachment': {
     alias: 'bga'
@@ -90,7 +91,7 @@ export let knownProps = {
     args: 'color'
   },
   'border-radius': {
-    args: 'len',
+    args: 'len len len len',
     alias: 'rd'
   },
   'border-top-left-radius': {

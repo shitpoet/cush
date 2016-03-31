@@ -1,7 +1,7 @@
 "use strict" // please
 
-//let hot = true
-let hot = false
+let hot = true
+//let hot = false
 
 let Module = require('module')
 let path = require('path')
@@ -10,6 +10,9 @@ let vm = require('vm')
 
 let chokidar
 if (hot) chokidar = require('chokidar') // for hot reloading
+
+let Debug
+if (hot) Debug = v8debug.Debug
 
 let cache = new Map()
 
@@ -464,7 +467,7 @@ function patch_exports(toks, patches) {
   for (let tok of toks) {
     if (is_id(tok) && tok.s=='export' && is_sp(tok.next)) {
       let kw = tok.next.next.s
-      if (kw == 'var' || kw == 'let' || kw == 'function') {
+      if (kw=='var' || kw=='let' || kw=='function' || kw=='fun') {
         let name = tok.next.next.next.next.s
         exports.push( name )
         add_tok_patch(patches, tok, '')
@@ -605,6 +608,36 @@ function rewrite(moduleName, code, reload) {
 /*function monkeyPatch(moduleName) {
 }*/
 
+function findScript(fn) {
+  let ss = Debug.scripts()
+  ss = ss.filter(
+    (s) => (
+      typeof s.name == 'string' &&
+      s.name.indexOf(fn)>=0 &&
+      s.name.indexOf('(old') < 0
+    )
+  )
+  //log(ss)
+  return ss[0]
+}
+
+function update(name) {
+  let fn = __dirname+"/"+name+".js"
+
+  //let fn = __dirname+"/"+name+".js"
+  let script = findScript(fn)
+  //log(script)
+
+  let code = fs.readFileSync(fn, 'utf8')
+  code = rewrite(name, code, true)
+
+  ///////
+
+  let cl = []
+  Debug.LiveEdit.SetScriptSource(script, code, false, cl)
+  //log(cl)
+}
+
 let include = global.include = module.exports = function(names, reload) {
   //let reload = arguments.length > 1 ? arguments[1] : false
   //let reload = args.length > 0 ? args[0] : false
@@ -656,9 +689,10 @@ let include = global.include = module.exports = function(names, reload) {
 
       if (reload) {
         //monkeyPatch(name, code)
+        update(name)
       } else if (hot) {
         chokidar.watch(fn).on('change', function(path) {
-          console.log('change')
+          console.log('script changed')
           cache.delete(name)
           include(name, true)
         })

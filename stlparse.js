@@ -193,8 +193,10 @@ export function StlParser() {
     let val
     if (arg.type == 'len') {
       val = scan_word(s)
-      if (/^[.\d]+$/.test(val) && val!='0') {
+      if (/^-?[.\d]+$/.test(val) && val!='0') {
         val += 'px'
+      } else if val == 'a' {
+        val = 'auto'
       }
     } else if (arg.type == 'num') {
       val = scan_word(s)
@@ -234,6 +236,8 @@ export function StlParser() {
           val += 'px'
         }
       }
+    } else if arg.type=='any' {
+      val = scan_word(s)
     } else s.error('unk arg type '+arg.type)
     return val
   }
@@ -273,16 +277,24 @@ export function StlParser() {
         let declStr = declAliases[s.id()]
         let [name, value] = declStr.split(/[:\s]\s*/)
         s.skipWs()
-        return {name, value}
+        return [{name, value}]
       } else {
+        let names = []
         let prop = parse_prop(rule, s)
-        let name = prop.name
+        names.push(prop.name)
+        //log(prop.name)
+        while s.trySkip(',') {
+          s.skipWs()
+          let another_prop = parse_prop(rule, s)
+          //log(another_prop.name)
+          names.push(another_prop.name)
+        }
         s.trySkip(':')
         s.skipSp()
         let value  = parse_prop_value(prop, s)
         s.trySkip(';')
         s.skipWs()
-        return {name, value}
+        return names.map(name=>({name,value}))
       }
     } else {
       throw s.error('parse_decl: prop name expected')
@@ -293,9 +305,12 @@ export function StlParser() {
     let decls = {}
     s.skipWs()
     while (s.t && s.s!='}' && s.t.line.obs==0) {
-      let decl = parse_decl(rule, s)
-      if (decl) {
-        decls[decl.name] = decl
+      let new_decls = parse_decl(rule, s)
+      //log({new_decls})
+      if (new_decls) {
+        for decl of new_decls {
+          decls[decl.name] = decl
+        }
       } else {
         break
       }

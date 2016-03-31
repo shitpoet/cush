@@ -1,10 +1,9 @@
-"use strict"
 /* compile ast to js code */
 
 include('tplstringify')
 include('outstream')
 
-function compileTemplate(ast) {
+export fun compileTemplate(ast) {
   return function(vars) {
     log('stringify ---------------------')
     var out = new OutStream()

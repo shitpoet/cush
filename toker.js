@@ -64,7 +64,7 @@ include('o')
   console.log.apply(console, arguments);
 }*/
 
-var tt = {
+export let tt = {
   sp: 1,
   nl: 2,
   ws: 1|2,
@@ -189,8 +189,7 @@ var tokenize = exports.tokenize = function(fn, str) {
     var i0 = i
 
     if ( // id
-      ch>='a'&&ch<='z' ||
-      (ch=='-'||ch=='_') && (
+      ch>='a'&&ch<='z' || ch=='_' || ch=='-' && (
         ch2>='a'&&ch<='z' ||
         (ch2=='-'||ch2=='_') && (
           ch3>='a' && ch3<='z'

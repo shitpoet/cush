@@ -17,17 +17,17 @@ export let log = console.log.bind(console)
   log(caller.name+'('+args.join(', ')+')')
 }
 
-global.log_call = log_call
+global.log_call = log_call*/
 
-function getFile(fn) {
+export function getFile(fn) {
   return fs.readFileSync(fn,'utf8')
 }
 
-function exists(fn) {
+export function exists(fn) {
   return fs.existsSync(fn)
 }
 
-function putFile(fn, s) {
+/*function putFile(fn, s) {
   fs.writeFileSync(fn, s)
 }
 

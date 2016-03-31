@@ -1,6 +1,28 @@
 
+function unwrap_class_name(name) {
+  if (name.endsWith('-wrap'))
+    return name.split('-wrap')[0]
+  else
+    return name
+}
 
-function stringifyTemplate(ast, out, depth) {
+function get_full_cname(node, name) {
+  if (name.startsWith('_')) {
+    assert(node.parent.classes.length > 0,
+      'parent node has no classes for '+name)
+    if name=='_' {
+      return unwrap_class_name(
+        get_full_cname(node.parent, node.parent.classes[0])
+      )
+    } else {
+      return get_full_cname(node.parent, node.parent.classes[0])+'_'+name
+    }
+  } else {
+    return name
+  }
+}
+
+export function stringifyTemplate(ast, out, depth) {
 
   depth = (depth) ? depth : 0
   /*log('st',depth)*/
@@ -38,7 +60,11 @@ function stringifyTemplate(ast, out, depth) {
       tagLine += ' id='+ast.id
     }
     if (ast.classes.length>0) {
-      tagLine += " class='"+ast.classes.join(' ')+"'"
+      let classes = ast.classes
+      classes = classes.map((name) => {
+        return get_full_cname(ast, name)
+      })
+      tagLine += " class='"+classes.join(' ')+"'"
     }
     out.write( '<'+tagLine, depth )
     // stringify attrs
@@ -61,12 +87,12 @@ function stringifyTemplate(ast, out, depth) {
       out.sp()
     }
   }
-  if (ast.text) {
-    out.write( ast.text, depth )
-  } else if (ast.cmnt) {
+  if (ast.cmnt) {
     out.nl()
     out.write( '<!--'+ast.cmnt+'-->', depth )
     out.nl()
+  } else if (ast.text) {
+    out.write( ast.text, depth )
   } else {
     var n = ast.childs.length
     for (var i = 0; i < n; i++) {

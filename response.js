@@ -118,7 +118,7 @@ export function respond(opts) {
           tpl = tpl.split('<?').join('PHP_OPEN_TAG')
           tpl = tpl.split('?>').join('PHP_CLOSE_TAG')
         }
-        tpl = renderTemplte(tplPath, tpl)
+        tpl = renderTemplate(tplPath, tpl)
         //tpl = view.render(tplPath, tpl, lastStlPath, lastStl, [projectInfo.vars, pageVars], renderOpts).tpl
         lastHtml = tpl
         if (renderOpts.skipPhpTags) {

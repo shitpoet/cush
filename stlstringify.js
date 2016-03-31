@@ -203,13 +203,19 @@ fun stringifyRule(prefix, rule, out, scope, depth) {
       out.nlnl()
     } else if rule.atrule {
       let {name,params} = rule.atrule
-      out.write(`@${name} ${params} {`, rule_depth)
-      out.nl()
-      write_sels(rule.parent, out, rule_depth+1)
-      write_block(rule, out, rule_depth+1)
-      out.nl()
-      out.write(`}`, rule_depth)
-      out.nlnl()
+      if name=='media' {
+        out.write(`@${name} ${params} {`, rule_depth)
+        out.nl()
+        write_sels(rule.parent, out, rule_depth+1)
+        write_block(rule, out, rule_depth+1)
+        out.nl()
+        out.write(`}`, rule_depth)
+        out.nlnl()
+      } else {
+        out.write(`@${name} `, rule_depth)
+        write_block(rule, out, rule_depth)
+        out.nlnl()
+      }
     }
 
     // nested rules
