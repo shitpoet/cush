@@ -530,6 +530,8 @@ function patch_ifs(toks, patches) {
           add_tok_patch(patches, tok2, '){')
         }
       }
+    } else if (tok.s=='elif' && tok.prev.s!='.' ) {
+      add_tok_patch(patches, tok, 'else if')
     }
   }
 }
