@@ -47,7 +47,7 @@ export let knownProps = {
   background: {
     alias: 'bg',
     //hasColorArgs: true
-    args: 'color any any'
+    args: 'color any any any any'
   },
   'background-attachment': {
     alias: 'bga'
@@ -419,6 +419,14 @@ export let knownProps = {
   'text-decoration': {
     alias: 'td'
   },
+  'text-overflow': {
+    args: {
+      type: 'enum',
+      values: {
+        ellipsis: {}
+      }
+    }
+  },
   'text-rendering': {},
   'text-shadow': {
     alias: 'ts'
@@ -492,6 +500,7 @@ export let declAliases = {
   cell: 'display: table-cell',
   center: 'text-align: center',
   column: 'flex-direction: column',
+  coem: "content: ''",
   // d e
   fr: 'float: right',
   fl: 'float: left',

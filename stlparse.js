@@ -318,6 +318,25 @@ export function StlParser() {
     return decls
   }
 
+  fun at_include(s) {
+    return s.s=='+' && s.s2=='include'
+  }
+
+  fun do_include(parent, s) {
+    s.skip('+')
+    s.skip('include')
+    s.skipSp()
+    let name = s.shift().s
+    let fn = 'css/_'+name+'.stl'
+    var str = fs.readFileSync(fn,'utf8')
+    var toks = tokenize(fn, str)
+    //dumpTokens(toks)
+    //dumpLinesFlags(str, toks)
+    var s2 = new TokStream(toks)
+    let ast = parse(s2)
+    return ast
+  }
+
   function parse_nested_rules(parent, s) {
     let childs = []
     //log('parse nested rules ' + s.t?s.s:'s.t==null')
@@ -330,6 +349,8 @@ export function StlParser() {
         s.skipWs()
       } else if (is_cmnt(s.t)) {
         s.skipCmnt()
+      } else if (at_include(s)) {
+        push_childs( childs, do_include(parent, s) )
       } else if (at_nested_rule(s)) {
         //log('nested rule '+s.s)
         push_childs( childs, parse_rule(parent, s) )
@@ -358,7 +379,7 @@ export function StlParser() {
     return rule
   }
 
-  this.parse = function(s) {
+  let parse = this.parse = function(s) {
     var rule = new_rule(null)
     //parse_ruleBody(rule, s)
     rule.childs = parse_nested_rules(rule, s)

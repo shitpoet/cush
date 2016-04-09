@@ -18,7 +18,9 @@ include('stlcompile')
 //var view = hotload('./view.js')
 
 //var projectJson = eval('('+fs.readFileSync('cush.json','utf8')+')')
-var projectInfo = require(process.cwd()+'/cush.js')
+//var projectInfo = require(process.cwd()+'/cush.js')
+include(process.cwd()+'/cush')
+log('projectInfo',projectInfo)
 
 var lastTplPath='', lastTpl='', lastStlPath='', lastStl=''
 var lastCss='', lastHtml=''
@@ -34,7 +36,7 @@ fun renderTemplate(fn, str) {
   var tplparser = new TplParser()
   var ast = tplparser.parse(s)
   var func = compileTemplate(ast)
-  return func()
+  return func(projectInfo.variables)
 }
 
 fun renderStyle(fn, str) {
@@ -46,14 +48,14 @@ fun renderStyle(fn, str) {
   var ast = stlparser.parse(s)
   //log(ast)
   var func = compileStyle(ast)
-  return func()
+  return func(projectInfo.variables)
 }
 
 export function respond(opts) {
   return function (req, res) {
     var renderOpts = {
-      skipPhpTags: projectInfo.vars.phpMode,
-      recursiveRender: !projectInfo.vars.phpMode
+      skipPhpTags: projectInfo.variables.phpMode,
+      recursiveRender: !projectInfo.variables.phpMode
     }
     //log('render opts',renderOpts)
 
@@ -138,6 +140,8 @@ export function respond(opts) {
         if (opts.onSetLastError) opts.onSetLastError('tpl', e)
       }
 
+      fs.writeFile(htmlPath, tpl)
+
       //log(opts);
       if (opts.liveReload) {
 
@@ -145,7 +149,7 @@ export function respond(opts) {
         tpl += getFile(__dirname+'/lib/socket.io.js')
         tpl += getFile(__dirname+'/reload.js')
         tpl += "</script>"*/
-        //if (projectInfo.vars.phpMode) {
+        //if (projectInfo.variables.phpMode) {
         if (tpl.indexOf('</html>')>=0) { // attach autoreload script only once
           tpl += "<script src='http://localhost:8888/RELOAD.js'></script>"
         }
@@ -154,7 +158,7 @@ export function respond(opts) {
 
       res.end(tpl)
       //putFile(htmlPath, tpl)
-      if (projectInfo.vars.phpMode) {
+      if (projectInfo.variables.phpMode) {
         /*if htmlPath=='index.html') { // main page
           htmlPath = 'home.php';
         } else*/ if (htmlPath.startsWith('_')) { // partial
@@ -164,7 +168,6 @@ export function respond(opts) {
         }
       }
 
-      fs.writeFile(htmlPath, tpl)
     } else if (ext=='css' && exists(stlPath)) {
     //} else if (pagename.startsWith('style.css')) {
       log('style '+stlPath)
@@ -191,10 +194,10 @@ export function respond(opts) {
         if (opts.onSetLastError) opts.onSetLastError('stl', e)
       }
       if (opts.autoprefix) {
-        log('autoprefix')
+        log('apply autoprefix')
         //var cleaner  = postcss([ autoprefixer({ add: false, browsers: [] }) ]);
         var pc = postcss([
-          require('postcss-rgba-hex'),
+          //require('postcss-rgba-hex'),
           autoprefixer({
             browsers: ['last 2 versions', 'ios 5', 'android >= 2.1', 'ie 8', 'ie 9']
           })
@@ -202,11 +205,14 @@ export function respond(opts) {
         /*cleaner.process(stl).then(function (cleaned) {
           return prefixer.process(cleaned.css)
         }).then(function (result) {*/
+        log(cssPath)
         pc.process(stl).then(function(result) {
           stl = result.css
-          //console.log(stl);
           res.end(stl)
-          putFile(cssPath, stl)
+          //console.log(stl);
+          //log('putf',putFile)
+          fs.writeFile(cssPath, stl)
+
         });
       } else {
         res.end(stl)

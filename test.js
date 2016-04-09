@@ -11,6 +11,8 @@ include('stlparse')
 include('tplcompile')
 include('stlcompile')
 
+var projectInfo = require(process.cwd()+'/cush.js')
+
 function testTpl() {
   var fn = 'index.tpl'
   var str = fs.readFileSync(fn,'utf8')
@@ -20,7 +22,8 @@ function testTpl() {
   var s = new TokStream(toks)
   var tplparser = new TplParser()
   var ast = tplparser.parse(s)
-  var fun = compileTemplate(ast)
+  log({projectInfo})
+  var fun = compileTemplate(ast, projectInfo.variables)
   log(fun())
 }
 
@@ -39,8 +42,8 @@ function testStl() {
   //*/
 }
 
-//testTpl()
-testStl()
+testTpl()
+//testStl()
 
 //*/
 

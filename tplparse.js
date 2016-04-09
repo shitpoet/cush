@@ -19,23 +19,79 @@
 
 include('tags')
 
+function new_node(parent) {
+  //if (parent && parent.tag) log('new node with parent '+parent.tag.name)
+  //todo: refactor this goddy structure
+  return seal({
+    parent: parent,
+
+    stmnt: '',
+    condition: '',
+    true_branch: null,
+    false_branch: null,
+
+    tag: null,
+    attrs: {},
+    id: '',
+    classes: [],
+    text: '',
+    childs: [],
+    cmntBefore: '',
+    cmntAfter: '',
+
+    cmnt: '',
+
+    startTok: null,
+    inTok: null,
+    outTok: null,
+    endTok: null,
+    wsBefore: undefined, //todo: clean up ws fields
+    wsAfter: undefined,
+    wsIn: undefined,
+    wsOut: undefined,
+    innerws: null,
+    outerws: null
+
+  })
+}
+
+export fun clone_node(node, parent) {
+  if (node) {
+    let p = parent ? parent : node.parent
+    let n = new_node(p)
+    for (let key in node)
+      n[key] = node[key]
+    n.childs = []
+    for (let child of node.childs) {
+      n.childs.push(clone_node(child, n))
+    }
+    return n
+  } else {
+    return null
+  }
+}
+
 export function TplParser() {
 
-  function newNode(parent) {
-    //if (parent && parent.tag) log('new node with parent '+parent.tag.name)
-    return {
-      parent: parent,
-      tag: null,
-      attrs: {},
-      id: '',
-      classes: [],
-      text: '',
-      childs: [],
-      startTok: null,
-      inTok: null,
-      outTok: null,
-      endTok: null
-    }
+  let at_include = s => s.s=='+' && s.s2=='include'
+
+  fun parse_include(parent, s) {
+    s.skip('+')
+    s.skip('include')
+    s.skipSp()
+    let name = s.shift().s
+    let fn = '_'+name+'.tpl'
+    var str = fs.readFileSync(fn,'utf8')
+    var toks = tokenize(fn, str)
+    var s2 = new TokStream(toks)
+    var ast = parse(s2)
+    //ast.parent = parent
+    /*for (let child of ast.childs) {
+      child.parent = parent
+    }*/
+    return ast
+    //let node = new_node(paret)
+    //return parse_childs(node, s2
   }
 
   function getKnownTag(tagName) {
@@ -47,7 +103,9 @@ export function TplParser() {
     }
   }
 
-  var atOpeningTag = function(s) {
+  let at_statement = s => s.s=='if' || s.s=='for'
+
+  var at_opening_tag = function(s) {
     return s.s=='<' && (
       is_id(s.t2) || s.s2=='.' || s.s2=='#'
     )
@@ -60,7 +118,7 @@ export function TplParser() {
     )
   }
 
-  var atShortTag = function(s) {
+  var at_short_tag = function(s) {
     return (
       s.t.line.obs > 0 ||
       s.atLineStart() && (
@@ -124,8 +182,8 @@ export function TplParser() {
     }
   }
 
-  function parseTag(parent, s) {
-    let node = newNode(parent, s)
+  function parse_tag(parent, s) {
+    let node = new_node(parent, s)
     node.startTok = s.t
     var tagName
     if (is_id(s.t)) {
@@ -154,12 +212,13 @@ export function TplParser() {
       parseAttrs(node, s)
       s.skipSp()
     }
+    log('parsed tag: '+tagName+'.'+node.classes.join('.'))
     return node
   }
 
   function parseOpeningTag(parent, s) {
     s.skip('<')
-    let node = parseTag(parent, s)
+    let node = parse_tag(parent, s)
     s.skipSp()
     s.skip('>')
     node.inTok = s.t
@@ -177,7 +236,7 @@ export function TplParser() {
     s.skip('>')
   }
 
-  function parseNormalTag(parent, s) {
+  function parse_normal_tag(parent, s) {
     let node = parseOpeningTag(parent, s)
     let tag = node.tag
     if (!tag.selfClosing) {
@@ -187,36 +246,48 @@ export function TplParser() {
     return node
   }
 
-  function parseShortTag(parent, s) {
-    let node = parseTag(parent, s)
-    s.skipSp()
+  fun parse_short_tag_body(node, s) {
+
     if (s.t.line.obs > 0) {
+      //log('prev '+s.t.line.prev.s+' -- have '+s.t.line.prev.obs+' obs')
+      log('### '+s.t.line.s+' -- have '+s.t.line.obs+' obs')
+      log('with {} block')
       s.t.line.obs--
       s.skip('{')
       node.childs = parseChilds(node, s)
       node.endTok = s.t
       s.skip('}')
-    } else {
+    } else if (!node.tag.selfClosing) {
+      log('not self closing')
+      //log('### '+s.t.line.s+' -- dont have obs')
       //log('short tag without block')
       node.childs = parseChilds(node, s, '\n')
-      //pushChilds( node.childs, parseTextNode(parent, s) )
+      //push_childs( node.childs, parse_text_node(parent, s) )
       //node.endTok = node.startTok.prev.prev
       node.wsBefore = tt.nl
       node.wsAfter = tt.nl
       let n = node.childs.length
       if (n > 0) node.childs[0].startTok = null
       if (n > 0) node.childs[n-1].endTok = null
+    } else {
+      log('sefl closing')
     }
     return node
   }
 
-  function parseTextNode(parent, s) {
-    let node = newNode(parent)
+  fun parse_short_tag(parent, s) {
+    let node = parse_tag(parent, s)
+    s.skipSp()
+    return parse_short_tag_body(node, s)
+  }
+
+  function parse_text_node(parent, s) {
+    let node = new_node(parent)
     node.startTok = s.t
     node.text = ''
     while (
       s.t && s.s!='\n' &&
-      !atOpeningTag(s) && !atClosingTag(s)
+      !at_opening_tag(s) && !atClosingTag(s)
     ) {
       //log('s.s atClosingTag?',s.s,atClosingTag(s))
       node.text += s.shift().s
@@ -226,13 +297,33 @@ export function TplParser() {
     return node
   }
 
+  fun parse_comment(parent, s) {
+    let node = new_node(parent)
+    node.cmnt = s.shift().s
+    return node
+  }
+
+  function parse_statement(parent, s) {
+    let node = new_node(parent)
+    node.stmnt = s.shift().s
+    s.skipSp()
+    s.skip('(')
+    node.condition = s.until(')')
+    s.skip(')')
+    s.skipSp()
+    node.true_branch = new_node(parent)
+    parse_short_tag_body(node.true_branch, s)
+    //todo: `else` branch
+    return node
+  }
+
   function pushChild(arr, child) {
     arr.push(child)
   }
 
-  function pushChilds(arr, childs) {
+  function push_childs(arr, childs) {
     if (childs) {
-      if (childs.isArray && childs.isArray()) {
+      if ('isArray' in childs && childs.isArray()) {
         arr = arr.concat(childs)
       } else {
         arr.push(childs)
@@ -248,12 +339,18 @@ export function TplParser() {
     ) {
       if (is_ws(s.t)) {
         s.skipWs()
-      } else if (atShortTag(s)) {
-        pushChilds( childs, parseShortTag(parent, s) )
-      } else if (atOpeningTag(s)) {
-        pushChilds( childs, parseNormalTag(parent, s) )
+      } else if (is_cmnt(s.t)) {
+        push_childs( childs, parse_comment(parent, s) )
+      } else if (at_include(s)) {
+        push_childs( childs, parse_include(parent, s) )
+      } else if (at_statement(s)) {
+        push_childs( childs, parse_statement(parent, s) )
+      } else if (at_short_tag(s)) {
+        push_childs( childs, parse_short_tag(parent, s) )
+      } else if (at_opening_tag(s)) {
+        push_childs( childs, parse_normal_tag(parent, s) )
       } else { // text
-        pushChilds( childs, parseTextNode(parent, s) )
+        push_childs( childs, parse_text_node(parent, s) )
       }
     }
 
@@ -335,6 +432,8 @@ export function TplParser() {
     for (var child of node.childs) {
       calcWs(child)
     }
+    if (node.true_branch) calcWs(node.true_branch)
+    if (node.false_branch) calcWs(node.false_branch)
   }
 
   function postparse(node) {
@@ -342,7 +441,7 @@ export function TplParser() {
   }
 
   var parse = this.parse = function(s) {
-    let root = newNode(null)
+    let root = new_node(null)
     root.childs = parseChilds(root, s)
     postparse(root)
     return root

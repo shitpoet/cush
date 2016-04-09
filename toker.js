@@ -162,7 +162,7 @@ var tokenize = exports.tokenize = function(fn, str) {
       ch2 = eof
       ch3 = eof
     }*/
-    if (ch=='\r' || ch=='\n') {
+    if (ch0=='\r' || ch0=='\n') {
       ln++, col = 1
       sol = tt.sol // start of line
       // create new line descriptor

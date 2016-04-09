@@ -424,9 +424,11 @@ function dumpTokens(toks) {
 // nodejs signature for wrapper:
 //   fun exports, require, module, __filename, __dirname
 // now we dont use it at all
-function wrap_module(name, code, exports) {
-  code =
-    "'use strict';" + code + ';' +
+function wrap_module(name, code, exports, opts) {
+  if (!opts.sloppy) {
+    code = "'use strict';" + code
+  }
+  code += ';' +
     exports.map(
       (name) => ('global.'+name+'='+name)
     ).join(';') +
@@ -583,7 +585,7 @@ function apply_tok_patches(code, patches) {
   return patched
 }
 
-function rewrite(moduleName, code, reload) {
+function rewrite(moduleName, code, opts) {
   //code = code.trim()
   let toks = tokenize(moduleName, code)
   //log(code)
@@ -595,7 +597,7 @@ function rewrite(moduleName, code, reload) {
   let exports = patch_exports(toks, patches)
   patch_seals(toks, patches)
   code = apply_tok_patches(code, patches)
-  return wrap_module(moduleName, code, exports)
+  return wrap_module(moduleName, code, exports, opts)
 }
 
 /*function rewrite_strict2(moduleName, code, reload) {
@@ -622,7 +624,7 @@ function findScript(fn) {
 }
 
 function update(name) {
-  let fn = __dirname+"/"+name+".js"
+  let fn = name_to_fn(name)
 
   //let fn = __dirname+"/"+name+".js"
   let script = findScript(fn)
@@ -638,16 +640,31 @@ function update(name) {
   //log(cl)
 }
 
-let include = global.include = module.exports = function(names, reload) {
+function name_to_fn(name) {
+  let fn = ''
+  if (name.startsWith('/'))
+    fn = name
+  else
+    fn = __dirname+"/"+name
+  if (!fn.endsWith('.js')) fn += '.js'
+  return fn
+}
+
+let include = global.include = module.exports = function(names, opts) {
   //let reload = arguments.length > 1 ? arguments[1] : false
   //let reload = args.length > 0 ? args[0] : false
   //let reload = args.length > 0 ? args[0] : false
   //let reload = reload ? true : false
+
+  if (typeof opts == 'undefined') opts = {}
+
+  //log(opts)
+
   names = names.split(' ')
   for (let i = 0; i < names.length; i++) {
     let name = names[i]
-    if (!(name in cache) || reload) {
-      log(name);
+    if (!(name in cache) || opts.reload) {
+      log(name+' ' + (opts.sloppy?'(sloppy)':''));
 
       global.require = require
       //global.exports = module.exports
@@ -666,7 +683,7 @@ let include = global.include = module.exports = function(names, reload) {
 
       //(exports, require, module, __filename, __dirname) {' + code + ';};
 
-      let fn = __dirname+"/"+name+".js"
+      let fn = name_to_fn(name)
       /*var sandbox = {
         require,
         __dirname: path.dirname(fn),
@@ -677,7 +694,7 @@ let include = global.include = module.exports = function(names, reload) {
       var context = new vm.createContext(sandbox)*/
       let code = fs.readFileSync(fn, 'utf8')
       //log('original');log(code.trim())
-      code = rewrite(name, code, reload)
+      code = rewrite(name, code, opts)
       //log('rewrited');log(code.trim())
       var script = new vm.Script(code, {filename: fn})
       //global[`__script_${name}`] = script
@@ -687,17 +704,19 @@ let include = global.include = module.exports = function(names, reload) {
       //}.bind(global)()
       //vm.runInThisContext(code, fn)
 
-      if (reload) {
+      if (opts.reload) {
         //monkeyPatch(name, code)
         update(name)
       } else if (hot) {
         chokidar.watch(fn).on('change', function(path) {
           console.log('script changed')
+          let opts = cache[name]
           cache.delete(name)
-          include(name, true)
+          opts.reload = true
+          include(name, opts)
         })
       }
-      cache[name] = true
+      cache[name] = opts
       /*__eval: global[__eval_+name]
       }*/
     } else {

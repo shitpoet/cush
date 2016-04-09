@@ -68,6 +68,14 @@ function build_full_csels(rule) {
   return full_csels
 }
 
+function concat_cnames(parent_cname, cname) {
+  if (cname.startsWith('_'))
+    return parent_cname + '_' + cname
+  else
+    throw new Error('concantable child class should start with underscroe or colon')
+}
+
+// concat `:before` and `:after`
 // concat BEM-like class names
 function process_full_csel(full_csel) {
   let pcsel = []
@@ -85,10 +93,11 @@ function process_full_csel(full_csel) {
               let parent_cname = pcsel[k-1].classes[0]
               if (parent_cname.indexOf('--') > 0) {
                 parent_cname = parent_cname.split('--').shift()
-                sel.classes[0] = parent_cname + '_' + cname
+                sel.classes[0] = concat_cnames(parent_cname, cname)
                 pcsel.push(sel)
               } else {
-                sel.classes[0] = parent_cname + '_' + cname
+                sel.classes[0] = concat_cnames(parent_cname, cname)
+                //sel.classes[0] = parent_cname + '_' + cname
                 pcsel[k-1] = sel
               }
             } else {
@@ -100,10 +109,17 @@ function process_full_csel(full_csel) {
         } else {
           throw new Error('cant concat classes (too many child classes)')
         }
-      } else { // no `_classname`
+      } else { // no `:name` or `_classname`
         pcsel.push(sel)
       }
-    } else { // no classes
+    } else if (sel.tag==null && sel.pseudos.length==1) { // no tags or classes but have pseudo
+      let k = pcsel.length
+      if (k >= 1) {
+        pcsel[k-1].pseudos.push(sel.pseudos[0])
+      } else {
+        throw new Error('cant concat pseudo to parent (no parent)')
+      }
+    } else { // no classes, no pseudos
       pcsel.push(sel)
     }
   }
