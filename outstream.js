@@ -40,8 +40,15 @@ export let OutStream = function() {
   var nlnl = this.nlnl = function() {
     if (DEBUG) log('nlnl')
     if (text!='') {
-      if (!text.endsWith('\n\n')) text += '\n\n'
-      else if (text.endsWith('\n')) text += '\n'
+      if (text.endsWith('\n\n')) {
+        // do nothing //
+      } else {
+        if (text.endsWith('\n')) {
+          text += '\n'
+        } else {
+          text += '\n\n'
+        }
+      }
     }
   }
   this.getText = function() {

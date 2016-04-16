@@ -109,7 +109,32 @@ function process_full_csel(full_csel) {
         } else {
           throw new Error('cant concat classes (too many child classes)')
         }
-      } else { // no `:name` or `_classname`
+      } else if (cname.startsWith('--')) {
+        if (sel.classes.length == 1) {
+          //log(`full csel ${i} simp sel ${j} cname ${cname}`)
+          let k = pcsel.length
+          if (k >= 1) {
+            if (pcsel[k-1].classes.length == 1) {
+              let parent_cname = pcsel[k-1].classes[0]
+              if (parent_cname.indexOf('--') > 0) {
+                parent_cname = parent_cname.split('--').shift()
+                sel.classes[0] = parent_cname+cname
+                pcsel.push(sel)
+              } else {
+                sel.classes[0] = parent_cname+cname
+                //sel.classes[0] = parent_cname + '_' + cname
+                pcsel[k-1] = sel
+              }
+            } else {
+              throw new Error('cant concat classes (too many parent classes)')
+            }
+          } else {
+            throw new Error('cant concat classes (no parent)')
+          }
+        } else {
+          throw new Error('cant concat classes (too many child classes)')
+        }
+      } else { // no `_classname`
         pcsel.push(sel)
       }
     } else if (sel.tag==null && sel.pseudos.length==1) { // no tags or classes but have pseudo
@@ -209,6 +234,13 @@ fun stringifyRule(prefix, rule, out, scope, depth) {
     if (rule.cmnt) {
       out.nlnl()
       out.write('/*'+rule.cmnt+'*/', rule_depth)
+      out.nlnl()
+    }
+
+    if (rule.raw) {
+      out.nlnl()
+      //log('RAW "'+rule.raw+'"')
+      out.write(rule.raw.trim(), rule_depth)
       out.nlnl()
     }
 

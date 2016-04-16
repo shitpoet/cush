@@ -59,9 +59,9 @@ export let TokStream = function(toks) {
     while (self.t && is_ws(self.t)) shift()
   }
 
-  this.skipCmnt = function() {
+  /*this.skipCmnt = function() {
     while (self.t && is_cmnt(self.t)) shift()
-  }
+  }*/
 
   this.id = function() {
     if (is_id(self.t)) {

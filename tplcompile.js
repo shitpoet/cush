@@ -5,17 +5,30 @@ include('outstream')
 include('scope', {sloppy: true})
 //let SourceScope = require('./scope')
 
-// interpolate variables
-fun apply_scope(node, scope) {
-  if (node.text.indexOf('$')>=0) {
-    //log(node.text)
-    node.text = node.text.replace(/\$\((.*)\)/g,
+fun interpolate_string(str, scope) {
+  if (str.indexOf('$')>=0) {
+    str = str.replace(/\$\((.*)\)/g,
       (match, p1) =>{
         //log('expr',p1)
         //return 'MATCH'
         return scope.evalExpr(p1)
       }
     )
+  }
+  return str
+}
+
+// interpolate variables
+fun apply_scope(node, scope) {
+  for (let attrname in node.attrs) {
+    let attrval = node.attrs[attrname]
+    if (attrval.indexOf('$')>=0) {
+      node.attrs[attrname] = interpolate_string(attrval, scope)
+    }
+  }
+  if (node.text.indexOf('$')>=0) {
+    //log(node.text)
+    node.text = interpolate_string(node.text, scope)
   }
   for (let child of node.childs) {
     apply_scope(child, scope)

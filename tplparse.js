@@ -61,6 +61,9 @@ export fun clone_node(node, parent) {
     let n = new_node(p)
     for (let key in node)
       n[key] = node[key]
+    n.attrs = {}
+    for (let attrname in node.attrs)
+      n.attrs[attrname] = node.attrs[attrname]
     n.childs = []
     for (let child of node.childs) {
       n.childs.push(clone_node(child, n))
@@ -118,10 +121,10 @@ export function TplParser() {
     )
   }
 
-  var at_short_tag = function(s) {
+  var at_short_tag = function(s, at_start) {
     return (
       s.t.line.obs > 0 ||
-      s.atLineStart() && (
+      (s.atLineStart() || at_start) && (
         is_id(s.t) ||
         s.s=='.' && is_id(s.t2) ||
         s.s=='#' && is_id(s.t2)
@@ -136,7 +139,7 @@ export function TplParser() {
       return s.shift().s
   }
 
-  function parseAttrs(node, s) {
+  function parse_attrs(node, s) {
     let tag = node.tag
     /*while (
       tag.attrs[s.s] && (s.s2=='=' || tag.attrs[s.s].type=='boolean') ||
@@ -209,7 +212,7 @@ export function TplParser() {
     node.tag = knownTags[tagName]
     if (s.s!=':' && s.s2!=' ')  {
       s.skipSp()
-      parseAttrs(node, s)
+      parse_attrs(node, s)
       s.skipSp()
     }
     log('parsed tag: '+tagName+'.'+node.classes.join('.'))
@@ -249,17 +252,14 @@ export function TplParser() {
   fun parse_short_tag_body(node, s) {
 
     if (s.t.line.obs > 0) {
-      //log('prev '+s.t.line.prev.s+' -- have '+s.t.line.prev.obs+' obs')
-      log('### '+s.t.line.s+' -- have '+s.t.line.obs+' obs')
-      log('with {} block')
+      //log('### '+s.t.line.s+' -- have '+s.t.line.obs+' obs')
+      //log('with {} block')
       s.t.line.obs--
       s.skip('{')
-      node.childs = parseChilds(node, s)
+      node.childs = parseChilds(node, s, '', true)
       node.endTok = s.t
       s.skip('}')
     } else if (!node.tag.selfClosing) {
-      log('not self closing')
-      //log('### '+s.t.line.s+' -- dont have obs')
       //log('short tag without block')
       node.childs = parseChilds(node, s, '\n')
       //push_childs( node.childs, parse_text_node(parent, s) )
@@ -270,7 +270,7 @@ export function TplParser() {
       if (n > 0) node.childs[0].startTok = null
       if (n > 0) node.childs[n-1].endTok = null
     } else {
-      log('sefl closing')
+      //log('sefl closing')
     }
     return node
   }
@@ -331,30 +331,57 @@ export function TplParser() {
     }
   }
 
-  function parseChilds(parent, s, until) {
+  function parseChilds(parent, s, until, at_start) {
     var childs = []
+    //let at_start = true
 
     while (
       s.t && s.s!='}' && s.s!=until && !atClosingTag(s)
     ) {
       if (is_ws(s.t)) {
         s.skipWs()
-      } else if (is_cmnt(s.t)) {
-        push_childs( childs, parse_comment(parent, s) )
-      } else if (at_include(s)) {
-        push_childs( childs, parse_include(parent, s) )
-      } else if (at_statement(s)) {
-        push_childs( childs, parse_statement(parent, s) )
-      } else if (at_short_tag(s)) {
-        push_childs( childs, parse_short_tag(parent, s) )
-      } else if (at_opening_tag(s)) {
-        push_childs( childs, parse_normal_tag(parent, s) )
-      } else { // text
-        push_childs( childs, parse_text_node(parent, s) )
+      } else {
+        if (is_cmnt(s.t)) {
+          push_childs( childs, parse_comment(parent, s) )
+        } else if (at_include(s)) {
+          push_childs( childs, parse_include(parent, s) )
+        } else if (at_statement(s)) {
+          push_childs( childs, parse_statement(parent, s) )
+        } else if (at_short_tag(s, at_start)) {
+          push_childs( childs, parse_short_tag(parent, s) )
+        } else if (at_opening_tag(s)) {
+          push_childs( childs, parse_normal_tag(parent, s) )
+        } else { // text
+          push_childs( childs, parse_text_node(parent, s) )
+        }
+        at_start = false
       }
     }
 
     return childs
+  }
+
+  fun postparse_links(node){
+    if (node.tag) {
+      let tag_name = node.tag.name
+      if tag_name=='a' {
+        if (!('href' in node.attrs)) {
+          node.attrs.href = '#'
+        }
+      } else if tag_name=='img' {
+        if ('src' in node.attrs) {
+          let src = node.attrs.src
+          if (
+            !src.startsWith('http') &&
+            !src.startsWith('//')
+          ) {
+            node.attrs.src = 'img/'+node.attrs.src
+          }
+        }
+      }
+    }
+    for (let child of node.childs)
+      postparse_links(child)
   }
 
   function calcWs(node) {
@@ -437,6 +464,7 @@ export function TplParser() {
   }
 
   function postparse(node) {
+    postparse_links(node)
     calcWs(node)
   }
 

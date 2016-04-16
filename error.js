@@ -40,7 +40,7 @@ process.on('uncaughtException', (e) => {
   } else {
     console.log(e)
   }
-  process.exit()
+  //process.exit()
 });
 
 

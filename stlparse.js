@@ -51,7 +51,8 @@ export function StlParser() {
       name - font-face, media, charset etc
       params - query for @media
     } */,
-    cmnt: ''
+    cmnt: '',
+    raw: ''
   })
 
   let new_simple_sel = () => seal({
@@ -74,13 +75,30 @@ export function StlParser() {
   let at_atrule = (s) => s.s=='@'
   let at_nested_rule = (s) => s.t.line.obs > 0
 
+  //todo: refactor out magic bps
   function parse_atrule_header(rule, s) {
     //throw 'parse_atrule not impl'
     s.shift() // @
     let name, params
-    if is_int(s.t) {
+    if is_int(s.t) || 'xs sm md lg '.indexOf(s.s)>=0 {
+      let bp = s.shift().s
+      if parseInt(bp)!=bp {
+        log(bp)
+        bp = {xs:'320',sm:'768',md:'1024',lg:'1320'}[bp]
+        log(bp)
+      }
       name = 'media'
-      params = 'only screen and (max-width: '+s.shift().s+'px)'
+      params = 'only screen and '
+      if (s.s=='+') {
+        s.skip('+')
+        params += '(min-width: '+bp+'px)'
+      } else if (s.s=='-') {
+        s.skip('-')
+        params += '(max-width: '+bp+'px)'
+      } else {
+        // default - desktop first
+        params += '(max-width: '+bp+'px)'
+      }
     } else {
       name = s.id()
       params = s.until('{')
@@ -337,29 +355,16 @@ export function StlParser() {
     return ast
   }
 
-  function parse_nested_rules(parent, s) {
-    let childs = []
-    //log('parse nested rules ' + s.t?s.s:'s.t==null')
-    s.skipWs()
-    while (
-      s.t && s.s!='}' //&& s.s!=until && !atClosingTag(s)
-    ) {
-      //log('obs',s.t.line.obs)
-      if (is_ws(s.t)) {
-        s.skipWs()
-      } else if (is_cmnt(s.t)) {
-        s.skipCmnt()
-      } else if (at_include(s)) {
-        push_childs( childs, do_include(parent, s) )
-      } else if (at_nested_rule(s)) {
-        //log('nested rule '+s.s)
-        push_childs( childs, parse_rule(parent, s) )
-      } else { // decl
-        //parse_decl
-        throw s.error('nested rule expected')
-      }
-    }
-    return childs
+  fun parse_comment(parent, s) {
+    let node = new_rule(parent)
+    node.cmnt = s.shift().s
+    return node
+  }
+
+  fun parse_raw(parent, s) {
+    let node = new_rule(parent)
+    node.raw = s.shift().s
+    return node
   }
 
   function parse_rule(parent, s) {
@@ -377,6 +382,35 @@ export function StlParser() {
     rule.childs = parse_nested_rules(rule, s)
     s.skip('}')
     return rule
+  }
+
+  function parse_nested_rules(parent, s) {
+    let childs = []
+    //log('parse nested rules ' + s.t?s.s:'s.t==null')
+    s.skipWs()
+    while (
+      s.t && s.s!='}' //&& s.s!=until && !atClosingTag(s)
+    ) {
+      //log('obs',s.t.line.obs)
+      if (is_ws(s.t)) {
+        s.skipWs()
+      } else if (is_cmnt(s.t)) {
+        push_childs( childs, parse_comment(parent, s) )
+        //log(s.shift().s)
+        //s.skipCmnt()
+      } else if (is_raw(s.t)) {
+        push_childs( childs, parse_raw(parent, s) )
+      } else if (at_include(s)) {
+        push_childs( childs, do_include(parent, s) )
+      } else if (at_nested_rule(s)) {
+        //log('nested rule '+s.s)
+        push_childs( childs, parse_rule(parent, s) )
+      } else { // decl
+        //parse_decl
+        throw s.error('nested rule expected')
+      }
+    }
+    return childs
   }
 
   let parse = this.parse = function(s) {

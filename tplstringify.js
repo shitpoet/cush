@@ -7,7 +7,26 @@ function unwrap_class_name(name) {
 }
 
 function get_full_cname(node, name) {
-  if (name.startsWith('_')) {
+  if (name.startsWith('__')) {
+    assert(node.parent.classes.length > 0,
+      'parent node has no classes for '+name)
+    assert(node.parent.parent.classes.length > 0,
+      'parent-parent node has no classes for '+name)
+    if (name.indexOf('--')>0) {
+      let ss = name.split('--')
+      name = ss[0]
+      let mod = ss[1]
+      let full_cname = get_full_cname(
+        node.parent.parent,
+        node.parent.parent.classes[0]
+      ) + name
+      return full_cname+'.'+full_cname+'--'+mod
+    } else {
+      return get_full_cname(
+        node.parent.parent, node.parent.parent.classes[0]
+      ) + name
+    }
+  } else if (name.startsWith('_')) {
     assert(node.parent.classes.length > 0,
       'parent node has no classes for '+name)
     if name=='_' {
@@ -15,10 +34,28 @@ function get_full_cname(node, name) {
         get_full_cname(node.parent, node.parent.classes[0])
       )
     } else {
-      return get_full_cname(node.parent, node.parent.classes[0])+'_'+name
+      if (name.indexOf('--')>0) {
+        let ss = name.split('--')
+        name = ss[0]
+        let mod = ss[1]
+        //log(mod)
+        let full_cname = get_full_cname(
+          node.parent, node.parent.classes[0]
+        )+'_'+name
+        return full_cname+' '+full_cname+'--'+mod
+      } else {
+        return get_full_cname(node.parent, node.parent.classes[0])+'_'+name
+      }
     }
   } else {
-    return name
+    if (name.indexOf('--')>0) {
+      let ss = name.split('--')
+      name = ss[0]
+      let mod = ss[1]
+      return name+' '+name+'--'+mod
+    } else {
+      return name
+    }
   }
 }
 
