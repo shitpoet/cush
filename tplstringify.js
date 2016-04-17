@@ -6,7 +6,7 @@ function unwrap_class_name(name) {
     return name
 }
 
-function get_full_cname(node, name) {
+function get_full_cname(node, name, for_parent) {
   if (name.startsWith('__')) {
     assert(node.parent.classes.length > 0,
       'parent node has no classes for '+name)
@@ -18,12 +18,13 @@ function get_full_cname(node, name) {
       let mod = ss[1]
       let full_cname = get_full_cname(
         node.parent.parent,
-        node.parent.parent.classes[0]
+        node.parent.parent.classes[0],
+        true
       ) + name
       return full_cname+'.'+full_cname+'--'+mod
     } else {
       return get_full_cname(
-        node.parent.parent, node.parent.parent.classes[0]
+        node.parent.parent, node.parent.parent.classes[0], true
       ) + name
     }
   } else if (name.startsWith('_')) {
@@ -40,11 +41,13 @@ function get_full_cname(node, name) {
         let mod = ss[1]
         //log(mod)
         let full_cname = get_full_cname(
-          node.parent, node.parent.classes[0]
+          node.parent, node.parent.classes[0], true
         )+'_'+name
         return full_cname+' '+full_cname+'--'+mod
       } else {
-        return get_full_cname(node.parent, node.parent.classes[0])+'_'+name
+        return get_full_cname(
+          node.parent, node.parent.classes[0], true
+        )+'_'+name
       }
     }
   } else {
@@ -52,7 +55,11 @@ function get_full_cname(node, name) {
       let ss = name.split('--')
       name = ss[0]
       let mod = ss[1]
-      return name+' '+name+'--'+mod
+      if (for_parent) {
+        return name
+      } else {
+        return name+' '+name+'--'+mod
+      }
     } else {
       return name
     }
