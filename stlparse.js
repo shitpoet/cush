@@ -9,7 +9,7 @@
 
     parent - reference
 
-    sels - array of selectors:
+    csels - array of selectors:
       {
         tag: reference to tag descriptor
         id: string
@@ -40,6 +40,9 @@ export function StlParser() {
   let media_atrule_name = 'media'
   let fontface_atrule_name = 'font-face'
   let known_atrules = [media_atrule_name, fontface_atrule_name]
+
+  // top-level rules with simple selectors
+  let rule_index = {}
 
   let new_rule = (parent) => seal({
     parent,
@@ -104,6 +107,29 @@ export function StlParser() {
       params = s.until('{')
     }
     return seal({name,params})
+  }
+
+  fun at_mixin_call(s) {
+    return s.s=='+' && is_id(s.t2)
+  }
+
+  fun parse_mixin_call(rule, s) {
+    s.skip('+')
+    let mixin_name = scan_word(s)
+    log('mixin call',mixin_name)
+    if (rule_index[mixin_name]) {
+      log('found top-level rule for mixin')
+      let origin = rule_index[mixin_name]
+      let decls = []
+      for (let name in origin.decls) {
+        log(`copy prop ${name} = ` + origin.decls[name].value)
+        decls.push( origin.decls[name] )
+      }
+      return decls
+    } else {
+      log('no top-level rule found for mixin')
+      return []
+    }
   }
 
   function scan_pseudo(rule, s) {
@@ -291,6 +317,7 @@ export function StlParser() {
     return value
   }
 
+  // rets array of {name,value] objects
   function parse_decl(rule, s) {
     s.skipWs()
     if (is_id(s.t)) {
@@ -317,6 +344,8 @@ export function StlParser() {
         s.skipWs()
         return names.map(name=>({name,value}))
       }
+    } else if (s.s=='+' && is_id(s.t2)) {
+      return parse_mixin_call(rule, s)
     } else {
       throw s.error('parse_decl: prop name expected but '+s.s+' found')
     }
@@ -327,6 +356,7 @@ export function StlParser() {
     s.skipWs()
     while (s.t && s.s!='}' && s.t.line.obs==0) {
       let new_decls = parse_decl(rule, s)
+      s.skipWs()
       //log({new_decls})
       if (new_decls) {
         for decl of new_decls {
@@ -384,6 +414,18 @@ export function StlParser() {
     rule.decls = parse_decls(rule, s)
     rule.childs = parse_nested_rules(rule, s)
     s.skip('}')
+    if (parent.parent==null) {
+      if (rule.csels.length == 1) {
+        let csel = rule.csels[0]
+        if (csel.length == 1) {
+          let sel = csel[0]
+          if (sel.classes.length == 1) {
+            let cname = sel.classes[0]
+            rule_index[cname] = rule
+          }
+        }
+      }
+    }
     return rule
   }
 
@@ -405,6 +447,8 @@ export function StlParser() {
         push_childs( childs, parse_raw(parent, s) )
       } else if (at_include(s)) {
         push_childs( childs, do_include(parent, s) )
+      /*} else if (at_mixin_call(s)) {
+        push_childs( childs, parse_mixin_call(parent, s) )*/
       } else if (at_nested_rule(s)) {
         //log('nested rule '+s.s)
         push_childs( childs, parse_rule(parent, s) )

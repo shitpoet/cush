@@ -25,7 +25,12 @@ export let O = function(obj) {
 
 export let Throwing = new Proxy({}, {
   get: function(obj, prop) {
-    throw new ReferenceError('unknown property read: '+prop);
+    //log(prop, typeof prop)
+    if (typeof prop == 'string' && prop != 'inspect') {
+      throw new ReferenceError('unknown property read: '+prop);
+    } else {
+      return undefined
+    }
   }/*,
   set: function(obj, prop, val) {
     throw new ReferenceError('unknown property wrote: '+prop);

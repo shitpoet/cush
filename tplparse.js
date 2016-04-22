@@ -215,7 +215,7 @@ export function TplParser() {
       parse_attrs(node, s)
       s.skipSp()
     }
-    log('parsed tag: '+tagName+'.'+node.classes.join('.'))
+    //log('parsed tag: '+tagName+'.'+node.classes.join('.'))
     return node
   }
 

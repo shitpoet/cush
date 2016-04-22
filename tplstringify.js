@@ -43,7 +43,11 @@ function get_full_cname(node, name, for_parent) {
         let full_cname = get_full_cname(
           node.parent, node.parent.classes[0], true
         )+'_'+name
-        return full_cname+' '+full_cname+'--'+mod
+        if (for_parent) {
+          return full_cname
+        } else {
+          return full_cname+' '+full_cname+'--'+mod
+        }
       } else {
         return get_full_cname(
           node.parent, node.parent.classes[0], true
