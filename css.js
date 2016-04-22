@@ -88,7 +88,7 @@ export let knownProps = {
   'border-collapse': {
   },
   'border-color': {
-    args: 'color'
+    args: 'color color color color'
   },
   'border-radius': {
     args: 'len len len len',
@@ -130,7 +130,7 @@ export let knownProps = {
     }
   },
   'border-width': {
-    args: 'len',
+    args: 'len len len len',
     alias: 'bw'
   },
   'box-sizing': {},
@@ -266,6 +266,7 @@ export let knownProps = {
     alias: 'fst',
   },
   'font-stretch': {},
+  'font-variant': {},
   'font-weight': {
     alias: 'fw'
   },
@@ -390,6 +391,8 @@ export let knownProps = {
   right: {
     args: 'len',
     alias: 'r'
+  },
+  speak: {
   },
   src: { // @font-face
   },

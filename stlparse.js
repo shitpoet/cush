@@ -83,9 +83,9 @@ export function StlParser() {
     if is_int(s.t) || 'xs sm md lg '.indexOf(s.s)>=0 {
       let bp = s.shift().s
       if parseInt(bp)!=bp {
-        log(bp)
+        //log(bp)
         bp = {xs:'320',sm:'768',md:'1024',lg:'1320'}[bp]
-        log(bp)
+        //log(bp)
       }
       name = 'media'
       params = 'only screen and '
@@ -227,6 +227,9 @@ export function StlParser() {
         } else {
           val += code
         }
+      } else if (s.s=='rgb' || s.s=='rgba') {
+        val = s.until(')') + s.shift().s
+        log(val)
       } else { // color name or url...
         val = scan_word(s)
       }
@@ -315,7 +318,7 @@ export function StlParser() {
         return names.map(name=>({name,value}))
       }
     } else {
-      throw s.error('parse_decl: prop name expected')
+      throw s.error('parse_decl: prop name expected but '+s.s+' found')
     }
   }
 

@@ -6,7 +6,7 @@ include('outstream')
 fun clean_fonts(node, vars) {
   let decls = node.decls
   if ('font-weight' in decls) {
-    log(decls['font-weight'])
+    //log(decls['font-weight'])
     if (decls['font-weight'].value == '400') {
       delete decls['font-weight']
     }
@@ -45,7 +45,7 @@ fun scale_transform(node, vars) {
     for (let sel of csel) {
       for (let c of sel.classes) {
         if (c.startsWith(ignore_class_prefix)) {
-          log('ignore '+c)
+          //log('ignore '+c)
           return;
         }
       }
@@ -90,7 +90,7 @@ fun scale_transform(node, vars) {
         strs_new.push(str)
       }
       let str_new = strs_new.join(' ')
-      log(target_prop+' '+str+' --> '+str_new)
+      //log(target_prop+' '+str+' --> '+str_new)
       node.decls[target_prop].value = str_new
     }
   }

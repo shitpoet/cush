@@ -46,7 +46,7 @@ export let knownTags = {
     attrs: 'cite'
   },
   button: {
-    attrs: 'autofocus? name type value'
+    attrs: 'autofocus? name type value disabled?'
   },
   canvas: {
     attrs: 'width height'
