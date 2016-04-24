@@ -29,6 +29,7 @@ function new_node(parent) {
     condition: '',
     true_branch: null,
     false_branch: null,
+    loop_branch: null,
 
     tag: null,
     attrs: {},
@@ -311,8 +312,16 @@ export function TplParser() {
     node.condition = s.until(')')
     s.skip(')')
     s.skipSp()
-    node.true_branch = new_node(parent)
-    parse_short_tag_body(node.true_branch, s)
+    if (node.stmnt=='if') {
+      node.true_branch = new_node(parent)
+      parse_short_tag_body(node.true_branch, s)
+    } else if (node.stmnt=='for') {
+      node.loop_branch = new_node(parent)
+      parse_short_tag_body(node.loop_branch, s)
+    } else {
+      s.error('unknown statement: '+node.stmnt)
+    }
+
     //todo: `else` branch
     return node
   }
@@ -461,6 +470,7 @@ export function TplParser() {
     }
     if (node.true_branch) calcWs(node.true_branch)
     if (node.false_branch) calcWs(node.false_branch)
+    if (node.loop_branch) calcWs(node.loop_branch)
   }
 
   function postparse(node) {

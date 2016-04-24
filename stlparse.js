@@ -110,24 +110,24 @@ export function StlParser() {
   }
 
   fun at_mixin_call(s) {
-    return s.s=='+' && is_id(s.t2)
+    return s.s=='+' && is_id(s.t2) && s.s2!='include'
   }
 
   fun parse_mixin_call(rule, s) {
     s.skip('+')
     let mixin_name = scan_word(s)
-    log('mixin call',mixin_name)
+    log('in-rule mixin call',mixin_name)
     if (rule_index[mixin_name]) {
-      log('found top-level rule for mixin')
+      //log('found top-level rule for mixin')
       let origin = rule_index[mixin_name]
       let decls = []
       for (let name in origin.decls) {
-        log(`copy prop ${name} = ` + origin.decls[name].value)
+        //log(`copy prop ${name} = ` + origin.decls[name].value)
         decls.push( origin.decls[name] )
       }
       return decls
     } else {
-      log('no top-level rule found for mixin')
+      //log('no top-level rule found for mixin')
       return []
     }
   }
@@ -255,7 +255,7 @@ export function StlParser() {
         }
       } else if (s.s=='rgb' || s.s=='rgba') {
         val = s.until(')') + s.shift().s
-        log(val)
+        //log(val)
       } else { // color name or url...
         val = scan_word(s)
       }
@@ -344,7 +344,7 @@ export function StlParser() {
         s.skipWs()
         return names.map(name=>({name,value}))
       }
-    } else if (s.s=='+' && is_id(s.t2)) {
+    } else if (at_mixin_call(s)) { // (s.s=='+' && is_id(s.t2)) {
       return parse_mixin_call(rule, s)
     } else {
       throw s.error('parse_decl: prop name expected but '+s.s+' found')
@@ -378,6 +378,7 @@ export function StlParser() {
     s.skip('include')
     s.skipSp()
     let name = s.shift().s
+    log('stl include '+name)
     let fn = 'css/_'+name+'.stl'
     var str = fs.readFileSync(fn,'utf8')
     var toks = tokenize(fn, str)

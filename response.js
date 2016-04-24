@@ -205,19 +205,27 @@ export function respond(opts) {
         /*cleaner.process(stl).then(function (cleaned) {
           return prefixer.process(cleaned.css)
         }).then(function (result) {*/
-        log(cssPath)
+
         pc.process(stl).then(function(result) {
           stl = result.css
           res.end(stl)
           //console.log(stl);
           //log('putf',putFile)
+          log('write',cssPath)
           fs.writeFile(cssPath, stl)
-
+        }, function(error) {
+          //log(Object.keys(error.source))
+          log(error.toString())
+          /*log(error.message)
+          log('> '+source[line-1])
+          log('> '+source[line])
+          log('> '+source[line+1])*/
         });
       } else {
         res.end(stl)
         //log('fs.writeFile',cssPath)
         //putFile(cssPath, stl)
+        log('write',cssPath)
         fs.writeFile(cssPath, stl)
       }
     } else if (fn=='RELOAD.js') {

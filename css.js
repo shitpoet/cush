@@ -41,6 +41,7 @@ export let knownProps = {
   },
   'align-self': {
   },
+  animation: {},
   appearance: {
     alias: 'appear'
   },

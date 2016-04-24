@@ -30,6 +30,16 @@ fun apply_scope(node, scope) {
     //log(node.text)
     node.text = interpolate_string(node.text, scope)
   }
+  /* during applying scope there can be problems
+     if inner elements introduce new variables
+     now we ignore these elements (only for loops
+     can introduce new variables now, so we do not
+     go for `loop_branch` but go for `true_branch` (if)) */
+  if (node.true_branch) {
+    //HACK: workaround (or right way???) to have correct interpolations for if-blocks inside of for-loops
+    node.true_branch = clone_node( node.true_branch )
+    apply_scope(node.true_branch, scope)
+  }
   for (let child of node.childs) {
     apply_scope(child, scope)
   }
@@ -39,10 +49,10 @@ fun unlogic_ast(node, scope) {
   if (node) {
     if (node.stmnt) {
       let stmnt = node.stmnt
-      log('ntmnt',node.stmnt)
+      //log('stmnt',node.stmnt)
       if stmnt=='if' {
         let cond_val = scope.evalExpr(node.condition)
-        log({cond_val})
+        //log({cond_val})
         let n = cond_val ?
           node.true_branch :
           node.false_branch
@@ -59,11 +69,14 @@ fun unlogic_ast(node, scope) {
           [var_name]: undefined
         }
         scope.push(for_scope)
-        for (let var_val of scope.get(array_name)) {
-          let n = clone_node( node.true_branch )
+        //let loopArray = scope.get(array_name)
+        let loopArray = scope.evalExpr(array_name)
+        for (let var_val of loopArray) {
+          let n = clone_node( node.loop_branch )
           for_scope[var_name] = var_val
           apply_scope(n, scope)
           unlogic_ast(n, scope)
+          //apply_scope(n, scope)
           node.childs.push(n)
         }
         scope.pop()

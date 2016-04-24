@@ -29,6 +29,7 @@ export let Throwing = new Proxy({}, {
     if (typeof prop == 'string' && prop != 'inspect') {
       throw new ReferenceError('unknown property read: '+prop);
     } else {
+      log('seal: unk prop',prop)
       return undefined
     }
   }/*,

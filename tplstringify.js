@@ -21,7 +21,12 @@ function get_full_cname(node, name, for_parent) {
         node.parent.parent.classes[0],
         true
       ) + name
-      return full_cname+'.'+full_cname+'--'+mod
+      //return full_cname+'.'+full_cname+'--'+mod
+      if (for_parent) {
+        return full_cname
+      } else {
+        return full_cname+' '+full_cname+'--'+mod
+      }
     } else {
       return get_full_cname(
         node.parent.parent, node.parent.parent.classes[0], true
