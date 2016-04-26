@@ -178,7 +178,10 @@ export let knownTags = {
   sup: {},
   span: {},
   textarea: {
-    attrs: 'name, rows, cols, autofocus, disabled? required?, placeholder'
+    attrs: {
+      placeholder: { alias: 'ph' }
+    },
+    otherAttrs: 'name, rows, cols, autofocus, disabled? required?'
   },
   table: {
   },

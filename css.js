@@ -48,7 +48,7 @@ export let knownProps = {
   background: {
     alias: 'bg',
     //hasColorArgs: true
-    args: 'color any any any any'
+    args: 'color any any any any any any'
   },
   'background-attachment': {
     alias: 'bga'

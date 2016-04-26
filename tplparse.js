@@ -381,6 +381,7 @@ export function TplParser() {
         if ('src' in node.attrs) {
           let src = node.attrs.src
           if (
+            !src.startsWith('img/') &&
             !src.startsWith('http') &&
             !src.startsWith('//')
           ) {
@@ -389,6 +390,9 @@ export function TplParser() {
         }
       }
     }
+    if (node.true_branch) postparse_links(node.true_branch)
+    if (node.false_branch) postparse_links(node.true_branch)
+    if (node.loop_branch) postparse_links(node.loop_branch)
     for (let child of node.childs)
       postparse_links(child)
   }

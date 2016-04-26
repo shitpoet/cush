@@ -20,6 +20,11 @@ fun interpolate_string(str, scope) {
 
 // interpolate variables
 fun apply_scope(node, scope) {
+  if (node.id.indexOf('$')>=0) {
+    //log(node.text)
+    node.id = interpolate_string(node.id, scope)
+  }
+  //todo interpolate classes ?
   for (let attrname in node.attrs) {
     let attrval = node.attrs[attrname]
     if (attrval.indexOf('$')>=0) {
