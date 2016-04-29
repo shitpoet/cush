@@ -65,7 +65,7 @@ export let devServer = {
             //process.exit(5)
             sio.sockets.emit('reload')
           } else if (path.endsWith('.stl')) {
-            sio.sockets.emit('reload style')
+            sio.sockets.emit('reload style', path.replace('.stl','.css'))
           } else if (path.endsWith('cush.json')) {
             log('reload json')
             projectJson = eval('('+fs.readFileSync('cush.json','utf8')+')')

@@ -234,6 +234,11 @@ export function respond(opts) {
       code += getFile(__dirname+'/client/socket.io.js')
       code += getFile(__dirname+'/client/reload.js').replace('SIO_PORT', opts.port+1)
       res.end(code)
+    /*} else if (fn=='favicon.ico' && !fs.existsSync(fn)) {
+      * if favicon requests and there no file send development icon
+         to avoid 404 error message in console (because of bad browser extensions) *
+      req.url = 'media/favicon.ico'
+      staticServer.serve(req, res);i*/
     } else {
       //log('static file '+path)
       staticServer.serve(req, res);

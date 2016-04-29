@@ -10,14 +10,15 @@ function setScrollTop(y) {
   window.scrollTo(0,y)
 }
 
-function reloadStyle() {
+function reloadStyle(path) {
   var head = document.getElementsByTagName('head')[0]
   var styles = document.getElementsByTagName('link')
   var style1, ref1
   for (var i = 0; i < styles.length; i++) {
     var style = styles[i]
     var ref = style.href
-    if (style.rel=='stylesheet' && ref.indexOf('style.css')>=0) {
+    //if (style.rel=='stylesheet' && ref.indexOf('style.css')>=0) {
+    if (style.rel=='stylesheet' && ref.indexOf(path)>=0) {
       ref1 = ref
       style1 = styles[i]
       break
@@ -66,8 +67,8 @@ socket.on('reload', function(data){
   document.location.reload()
 })
 socket.on('reload style', function(data){
-  console.log('sio reload style')
-  reloadStyle()
+  console.log('sio reload style '+data)
+  reloadStyle(data)
 })
 
 var serverErrors = {}
