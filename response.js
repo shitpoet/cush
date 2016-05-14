@@ -8,12 +8,14 @@ var staticServer = new(require('node-static').Server)();
 let include = require('./include')
 include('error')
 include('common')
+include('pipeline')
 include('toker')
 include('tokstream')
 include('tplparse')
 include('stlparse')
 include('tplcompile')
 include('stlcompile')
+
 
 //var view = hotload('./view.js')
 
@@ -28,19 +30,31 @@ var lastPageVars = {}
 let tplParseError = null // was wo let......
 let stlParseError = null
 
-fun renderTemplate(fn, str) {
-  var toks = tokenize(fn, str)
+/*fun renderTemplate(fn, str) {
+  console.time('renderTemplate')
+  let toks
+  if (typeof str == 'undefined')
+    toks = fileCache.tokenize(fn)
+  else
+    toks = tokenize(fn, str)
   //dumpTokens(toks)
   //dumpLinesFlags(str, toks)
   var s = new TokStream(toks)
   var tplparser = new TplParser()
   var ast = tplparser.parse(s)
   var func = compileTemplate(ast)
-  return func(projectInfo.variables)
+  var res = func(projectInfo.variables)
+  console.timeEnd('renderTemplate')
+  return res
 }
 
 fun renderStyle(fn, str) {
-  var toks = tokenize(fn, str)
+  console.time('renderStyle')
+  let toks
+  if (typeof str == 'undefined')
+    toks = fileCache.tokenize(fn)
+  else
+    toks = tokenize(fn, str)
   //dumpTokens(toks)
   //dumpLinesFlags(str, toks)
   var s = new TokStream(toks)
@@ -48,7 +62,36 @@ fun renderStyle(fn, str) {
   var ast = stlparser.parse(s)
   //log(ast)
   var func = compileStyle(ast)
-  return func(projectInfo.variables)
+  let res = func(projectInfo.variables)
+  console.timeEnd('renderStyle')
+  return res
+}*/
+
+fun renderTemplate(fn) {
+  console.time('renderTemplate')
+
+  /*let ast = pipeline.parse(fn)
+  console.time('compileTemplate')
+  var func = compileTemplate(ast)
+  var res = func(projectInfo.variables)
+  console.timeEnd('compileTemplate')*/
+
+  let res = pipeline.render(fn, projectInfo.variables)
+
+  console.timeEnd('renderTemplate')
+  return res
+}
+
+fun renderStyle(fn) {
+  console.time('renderStyle')
+  /*let ast = pipeline.parse(fn)
+  console.time('compileStyle')
+  var func = compileStyle(ast)
+  let res = func(projectInfo.variables)
+  console.timeEnd('compileStyle')*/
+  let res = pipeline.render(fn, projectInfo.variables)
+  console.timeEnd('renderStyle')
+  return res
 }
 
 export function respond(opts) {
@@ -104,7 +147,7 @@ export function respond(opts) {
       } else {
         log('template '+tplPath)
       }
-      var tpl = getFile(tplPath)
+      var tpl = pipeline.get(tplPath).source
       res.writeHead(200, {"Content-Type": "text/html"})
       //log('---------------------------')
       //log(tpl)
@@ -112,23 +155,24 @@ export function respond(opts) {
       lastTplPath = tplPath, lastTpl = tpl
       lastPageVars = pageVars
       try {
-        if (renderOpts.skipPhpTags) {
+        /*if (renderOpts.skipPhpTags) {
           log('skip php tags')
           tpl = tpl.split('<?=$').join('PHP_ECHO_VAR_TAG')
           tpl = tpl.split('<?=').join('PHP_ECHO_TAG')
           tpl = tpl.split('<?php').join('PHP_OPEN_TAG')
           tpl = tpl.split('<?').join('PHP_OPEN_TAG')
           tpl = tpl.split('?>').join('PHP_CLOSE_TAG')
-        }
-        tpl = renderTemplate(tplPath, tpl)
+        }*/
+        //tpl = renderTemplate(tplPath, tpl)
+        tpl = renderTemplate(tplPath)
         //tpl = view.render(tplPath, tpl, lastStlPath, lastStl, [projectInfo.vars, pageVars], renderOpts).tpl
         lastHtml = tpl
-        if (renderOpts.skipPhpTags) {
+        /*if (renderOpts.skipPhpTags) {
           tpl = tpl.split('PHP_ECHO_VAR_TAG').join('<?php echo $')
           tpl = tpl.split('PHP_ECHO_TAG').join('<?php echo ')
           tpl = tpl.split('PHP_OPEN_TAG').join('<?php ')
           tpl = tpl.split('PHP_CLOSE_TAG').join('?>')
-        }
+        }*/
         if (opts.onSetLastError) opts.onSetLastError('tpl', null)
       } catch (e) {
         log('catch tpl parse error')
@@ -176,11 +220,12 @@ export function respond(opts) {
       res.setHeader("Expires", "0"); // Proxies.
       res.writeHead(200, {"Content-Type": "text/css"})
 
-      var stl = getFile(stlPath)
+      var stl = pipeline.get(stlPath).source
       lastStlPath = stlPath, lastStl = stl
       try {
         //stl = view.render(lastTplPath, lastTpl, stlPath, stl, [projectInfo.vars, lastPageVars]).stl
-        stl = renderStyle(stlPath, stl)
+        //stl = renderStyle(stlPath, stl)
+        stl = renderStyle(stlPath)
         lastCss = stl
         if (opts.onSetLastError) opts.onSetLastError('stl', null)
       } catch(e) {
@@ -240,7 +285,7 @@ export function respond(opts) {
       req.url = 'media/favicon.ico'
       staticServer.serve(req, res);i*/
     } else {
-      //log('static file '+path)
+      //log('static file '+req.url)
       staticServer.serve(req, res);
     }
   }

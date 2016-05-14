@@ -42,6 +42,8 @@ function new_node(parent) {
 
     cmnt: '',
 
+    flags: {},
+
     startTok: null,
     inTok: null,
     outTok: null,
@@ -85,14 +87,25 @@ export function TplParser() {
     s.skipSp()
     let name = s.shift().s
     let fn = '_'+name+'.tpl'
-    var str = fs.readFileSync(fn,'utf8')
+
+    /*var str = fs.readFileSync(fn,'utf8')
     var toks = tokenize(fn, str)
     var s2 = new TokStream(toks)
-    var ast = parse(s2)
+    var ast = parse(s2)*/
+
+    //todo: PL parse prduces childs==null here
+    //let ast = pipeline.parse(fn)
+
+    let toks = pipeline.tokenize(fn)
+
+    var ts = new TokStream(toks)
+    var ast = parse(ts)
+
     //ast.parent = parent
     /*for (let child of ast.childs) {
       child.parent = parent
     }*/
+
     return ast
     //let node = new_node(paret)
     //return parse_childs(node, s2
@@ -156,6 +169,7 @@ export function TplParser() {
         attrName = tag.attrAliases[attrName].name
       }
       let attr = tag.attrs[attrName]
+      //log(s.t2, s.t3)
       if (s.s2=='=' || attr && attr.type=='boolean' || isDataAttr) {
         //let attrName = s.id()
         s.shift() // skip attr name
@@ -208,6 +222,11 @@ export function TplParser() {
       }
     }
     if (!tagName) throw s.error('bad tag declaration')
+
+    if (s.trySkip('~')) {
+      //log('wrapper node: ', node)
+      node.flags.wrapper = true
+    }
 
     //log('tag',tagName)
     node.tag = knownTags[tagName]
@@ -383,7 +402,8 @@ export function TplParser() {
           if (
             !src.startsWith('img/') &&
             !src.startsWith('http') &&
-            !src.startsWith('//')
+            !src.startsWith('//') &&
+            !src.startsWith('../')
           ) {
             node.attrs.src = 'img/'+node.attrs.src
           }
@@ -391,10 +411,11 @@ export function TplParser() {
       }
     }
     if (node.true_branch) postparse_links(node.true_branch)
-    if (node.false_branch) postparse_links(node.true_branch)
+    if (node.false_branch) postparse_links(node.false_branch)
     if (node.loop_branch) postparse_links(node.loop_branch)
     for (let child of node.childs)
-      postparse_links(child)
+      //if (child)
+        postparse_links(child)
   }
 
   function calcWs(node) {
@@ -412,6 +433,8 @@ export function TplParser() {
         if (before) {
           if (is_nl(before)) nlBefore = true
           if (is_sp(before)) spBefore = true
+        } else { // start of file ???
+          nlBefore = true
         }
         //log('startTok',node.startTok.s)
       }

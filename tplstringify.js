@@ -54,9 +54,16 @@ function get_full_cname(node, name, for_parent) {
           return full_cname+' '+full_cname+'--'+mod
         }
       } else {
-        return get_full_cname(
-          node.parent, node.parent.classes[0], true
-        )+'_'+name
+        if (node.flags.wrapper && for_parent) {
+          //log(name+'  is wrapper')
+          return get_full_cname(
+            node.parent, node.parent.classes[0], true
+          )
+        } else {
+          return get_full_cname(
+            node.parent, node.parent.classes[0], true
+          )+'_'+name
+        }
       }
     }
   } else {

@@ -58,9 +58,13 @@ export let devServer = {
         '*.js','*.json','js/*.js'
       ]).on('change', function(path) {
         var event = 'change'
-        console.log(event, path);
-        if (event!='add' && event!='unlinkDir') {
-          if (path.startsWith(__dirname)) {
+        //if (event!='add' && event!='unlinkDir') {
+          console.log('watcher: '+event, path)
+          if (path.endsWith('.js')) {
+            log('reload js')
+            pipeline.clearCache()
+            sio.sockets.emit('reload')
+          } else if (path.startsWith(__dirname)) {
             //log('restart')
             //process.exit(5)
             sio.sockets.emit('reload')
@@ -75,7 +79,7 @@ export let devServer = {
           } else {
             sio.sockets.emit('reload')
           }
-        }
+        //}
       });
 
     } else { // php mode

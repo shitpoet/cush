@@ -140,7 +140,10 @@ export function StlParser() {
     if (extPseudos[str]) {
       str = extPseudos[str](rule, str)
     } else {
-      while (s.s=='(' || s.s==')' || is_id(s.t) || is_int(s.t)) {
+      while (
+        s.s=='(' || s.s==')' || is_id(s.t) || is_int(s.t) ||
+        s.s=='+' || s.s=='-'
+      ) {
         str += s.shift().s
       }
     }
@@ -323,9 +326,15 @@ export function StlParser() {
     if (is_id(s.t)) {
       if (declAliases[s.s]) {
         let declStr = declAliases[s.id()]
-        let [name, value] = declStr.split(/[:\s]\s*/)
+        let ss = declStr.split(/;\s*/)
+        let decls = []
+        for (let s of ss) {
+          let [name, value] = s.split(/[:\s]\s*/)
+          decls.push({name,value})
+        }
         s.skipWs()
-        return [{name, value}]
+        //return [{name, value}]
+        return decls
       } else {
         let names = []
         let prop = parse_prop(rule, s)
@@ -380,12 +389,19 @@ export function StlParser() {
     let name = s.shift().s
     log('stl include '+name)
     let fn = 'css/_'+name+'.stl'
-    var str = fs.readFileSync(fn,'utf8')
-    var toks = tokenize(fn, str)
+    /*var cache = fileCache.get(fn)
+    let toks
+    if (cache.toks)
+      toks = cache.toks
+    else
+      toks = tokenize(fn, cache.str)*/
+    /*let toks = pipeline.tokenize(fn)
     //dumpTokens(toks)
     //dumpLinesFlags(str, toks)
     var s2 = new TokStream(toks)
-    let ast = parse(s2)
+    let ast = parse(s2)*/
+
+    let ast = pipeline.parse(fn)
     return ast
   }
 

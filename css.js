@@ -158,7 +158,18 @@ export let knownProps = {
   'break-inside': {},
   'caption-side': {
   },
-  clear: {},
+  clear: {
+    args: {
+      type: 'enum',
+      values: {
+        none: {},
+        left: {},
+        right: {},
+        both: {}
+      },
+      autoAlias: true
+    }
+  },
   color: {
     args: 'color',
     varyArgs: true, // fix bug with parsing of rgba(...)
@@ -421,7 +432,19 @@ export let knownProps = {
     alias: 'ta'
   },
   'text-decoration': {
-    alias: 'td'
+    args: {
+      type: 'enum',
+      values: {
+        underline: {
+        },
+        overline: {
+        },
+        none: {
+        }
+      },
+      autoAlias: true
+    },
+    alias: 'td',
   },
   'text-overflow': {
     args: {
@@ -506,28 +529,38 @@ export let declAliases = {
   column: 'flex-direction: column',
   coem: "content: ''",
   // d e
+  dbg: 'background: #ffa',
+  dbgg: 'background: #faf',
+  dbggg: 'background: #aff',
   fr: 'float: right',
   fl: 'float: left',
   flex: 'display: flex',
   // g h
   ib: 'display: inline-block',
+  ibt: 'display: inline-block; vertical-align: top',
+  ibm: 'display: inline-block; vertical-align: middle',
   italic: 'font-style: italic',
   justify: 'text-align: justify',
   // k l m
   nowrap: 'white-space: nowrap',
   oh: 'overflow: hidden',
+  ptr: 'cursor: pointer',
   pointer: 'cursor: pointer',
   // q
   rel: 'position: relative',
   row: 'display: table-row',
   // s
   table: 'display: table',
+  tac: 'text-align: center',
+  tar: 'text-align: right',
+  tal: 'text-align: left',
   // u
   uc: 'text-transform: uppercase',
   vab: 'vertical-align: bottom',
   vat: 'vertical-align: top',
   vam: 'vertical-align: middle',
   // w x y z
+  wrap: 'white-space: normal'
 }
 
 

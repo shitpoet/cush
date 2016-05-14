@@ -114,7 +114,7 @@ export let knownTags = {
   },
   link: {
     selfClosing: true,
-    attrs: 'href, rel, type'
+    attrs: 'href, rel, type, media'
   },
   main: {},
   mark: {

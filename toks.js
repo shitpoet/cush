@@ -8,7 +8,7 @@ export let is_num     = t => t && t.t & 24
 export let is_id      = t => t && t.t & 32
 export let is_sig     = t => t && t.t & 64
 //export let isSQStr = t => t && t.t & 128
-//export let isDQStr = t => t && t.t & 128
+//export let isDQStr = t => t && t.t & 256
 export let is_qstr    = t => t && t.t & 384
 export let is_sym     = t => t && t.t & 512
 export let is_raw     = t => t && t.t & 1024

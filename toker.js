@@ -137,7 +137,7 @@ var tokenize = exports.tokenize = function(fn, str) {
   var n = str.length
   var i = -1 // :=0 after first pre-shift
   var ch,ch2,ch3
-  var line = {prev: null, fn: fn, s: srcLines[0], obs: 0, lastSym: ''}
+  var line = {prev: null, fn: fn, s: srcLines[0], obs0: 0, obs: 0, lastSym: ''}
   var prevt = {
     t: 0,
     s: '',
@@ -166,6 +166,7 @@ var tokenize = exports.tokenize = function(fn, str) {
       ln++, col = 1
       sol = tt.sol // start of line
       // create new line descriptor
+      line.obs0 = line.obs
       line = {prev: line, fn: fn, s: srcLines[ln-1], obs: 0, lastSym: ''}
     }
     //return ch0
@@ -240,6 +241,7 @@ var tokenize = exports.tokenize = function(fn, str) {
     } else if (ch=='"') {
       sol = 0
       t.t |= tt.dqstr
+      shift()
       while (ch!=eof && ch!='"') shift()
       t.ss = s.slice(i0+1,i)
       shift()
@@ -328,7 +330,7 @@ var tokenize = exports.tokenize = function(fn, str) {
   return toks
 }
 
-function dumpTokens(toks) {
+export function dump_tokens(toks) {
   var n = toks.length
   log(n+' tokens')
   for (var i = 0; i < n; i++) {
