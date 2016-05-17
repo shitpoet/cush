@@ -66,6 +66,16 @@ export let knownProps = {
     args: ['len','len'],
     alias: 'bgp'
   },
+  'background-repeat': {
+    /*args: {
+      type: 'enum',
+      values: {
+        'no-repeat',
+
+      }
+    }*/
+    alias: 'bgr'
+  },
   'background-size': {
     alias: 'bgs'
   },
@@ -364,14 +374,16 @@ export let knownProps = {
     args: ['len', 'len', 'len', 'len'],
   },
   overflow: {
-    /*args: {
+    args: {
       type: 'enum',
       values: {
+        'auto': { alias: 'a' },
+        'scroll': { alias: 's' },
         'visible': { alias: 'v' },
         'hidden': { alias: 'h' },
       }
-    }*/
-    //alias: 'over'
+    },
+    alias: 'over'
   },
   'overflow-x': {
     alias: 'overx'
@@ -467,6 +479,7 @@ export let knownProps = {
     alias: 't'
   },
   transform: {},
+  'transform-origin': {},
   transition: {},
   'unicode-range': {},
   'user-select': {
