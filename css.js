@@ -198,6 +198,7 @@ export let knownProps = {
   },
   content: {
     //args: 'str'
+    alias: 'cont'
   },
   cursor: {
     args: {
@@ -483,6 +484,12 @@ export let knownProps = {
   transition: {},
   'unicode-range': {},
   'user-select': {
+    args: {
+      type: 'enum',
+      values: {
+        'none': { alias: 'n' }
+      }
+    },
     alias: 'us'
   },
   'vertical-align': {
@@ -535,6 +542,7 @@ export let propAliases = {}
 
 export let declAliases = {
   abs: 'position: absolute',
+  white: 'background: white',
   bold: 'font-weight: bold',
   block: 'display: block',
   cell: 'display: table-cell',

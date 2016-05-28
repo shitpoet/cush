@@ -75,8 +75,8 @@ function concat_cnames(parent_cname, cname) {
     throw new Error('concantable child class should start with underscroe or colon')
 }
 
-// concat `:before` and `:after`
-// concat BEM-like class names
+// - concat `:before`, `:after` etc
+// - concat BEM-like class names
 function process_full_csel(full_csel) {
   let pcsel = []
   let m = full_csel.length

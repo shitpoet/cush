@@ -40,25 +40,27 @@ function get_full_cname(node, name, for_parent) {
         get_full_cname(node.parent, node.parent.classes[0])
       )
     } else {
-      if (name.indexOf('--')>0) {
-        let ss = name.split('--')
-        name = ss[0]
-        let mod = ss[1]
-        //log(mod)
-        let full_cname = get_full_cname(
+
+
+      if (node.flags.wrapper && for_parent) {
+        //log(name+'  is wrapper')
+        return get_full_cname(
           node.parent, node.parent.classes[0], true
-        )+'_'+name
-        if (for_parent) {
-          return full_cname
-        } else {
-          return full_cname+' '+full_cname+'--'+mod
-        }
+        )
       } else {
-        if (node.flags.wrapper && for_parent) {
-          //log(name+'  is wrapper')
-          return get_full_cname(
+        if (name.indexOf('--')>0) {
+          let ss = name.split('--')
+          name = ss[0]
+          let mod = ss[1]
+          //log(mod)
+          let full_cname = get_full_cname(
             node.parent, node.parent.classes[0], true
-          )
+          )+'_'+name
+          if (for_parent) {
+            return full_cname
+          } else {
+            return full_cname+' '+full_cname+'--'+mod
+          }
         } else {
           return get_full_cname(
             node.parent, node.parent.classes[0], true

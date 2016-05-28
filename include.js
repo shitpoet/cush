@@ -664,7 +664,7 @@ let include = global.include = module.exports = function(names, opts) {
   for (let i = 0; i < names.length; i++) {
     let name = names[i]
     if (!(name in cache) || opts.reload) {
-      log(name+' ' + (opts.sloppy?'(sloppy)':''));
+      console.log(name+' ' + (opts.sloppy?'(sloppy)':''));
 
       global.require = require
       //global.exports = module.exports
@@ -720,7 +720,7 @@ let include = global.include = module.exports = function(names, opts) {
       /*__eval: global[__eval_+name]
       }*/
     } else {
-      log(name+' (cached)');
+      console.log(name+' (cached)');
     }
   }
 }

@@ -7,8 +7,8 @@ export let pipeline = {
   getStatus(fn) {
     let c = this._cache
     if (c[fn]) {
-      let mtime = fs.statSync(fn).mtime.toString()
-      if (c[fn].mtime == mtime) {
+      let mtime = null//fs.statSync(fn).mtime.toString()
+      if (false) { //c[fn].mtime == mtime) {
         if (c[fn].toks) {
           if (c[fn].ast) {
             if (c[fn].code) {
@@ -130,9 +130,9 @@ export let pipeline = {
     } else {
       this.compile(fn)
       log('cache: '+fn+' is not rendered')
-      console.time('render')
+      console.time('pipeline.render')
       entry.str = entry.code(projectInfo.variables)
-      console.timeEnd('render')
+      console.timeEnd('pipeline.render')
     }
     return entry.str
   },
