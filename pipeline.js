@@ -7,8 +7,8 @@ export let pipeline = {
   getStatus(fn) {
     let c = this._cache
     if (c[fn]) {
-      let mtime = null//fs.statSync(fn).mtime.toString()
-      if (false) { //c[fn].mtime == mtime) {
+      let mtime = fs.statSync(fn).mtime.toString()
+      if (c[fn].mtime == mtime) {
         if (c[fn].toks) {
           if (c[fn].ast) {
             if (c[fn].code) {
@@ -33,6 +33,7 @@ export let pipeline = {
       log('no entry')
     }
   },
+
   get(fn) {
     let c = this._cache
     let mtime = fs.statSync(fn).mtime.toString()

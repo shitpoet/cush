@@ -64,12 +64,25 @@ export let devServer = {
             log('reload js')
             pipeline.clearCache()
             sio.sockets.emit('reload')
-          } else if (path.startsWith(__dirname)) {
+          } else if (path.startsWith(__dirname)) { // cush itself
             //log('restart')
             //process.exit(5)
             sio.sockets.emit('reload')
+          } else if (path.endsWith('.tpl')) {
+            if (path.startsWith('_')) {
+              log('partial template - clear cache') //tofix
+              pipeline.clearCache()
+            }
+            sio.sockets.emit('reload')
           } else if (path.endsWith('.stl')) {
-            sio.sockets.emit('reload style', path.replace('.stl','.css'))
+            if (path.split('/').pop().startsWith('_')) {
+              log('partial style - clear cache') //tofix
+              pipeline.clearCache()
+              // reload main style sheet
+              sio.sockets.emit('reload style', 'css/style.css')
+            } else {
+              sio.sockets.emit('reload style', path.replace('.stl','.css'))
+            }
           } else if (path.endsWith('cush.json')) {
             log('reload json')
             projectJson = eval('('+fs.readFileSync('cush.json','utf8')+')')
@@ -77,6 +90,7 @@ export let devServer = {
             templateVars = styleVars
             sio.sockets.emit('reload')
           } else {
+            log('unk watched resource changed: '+path)
             sio.sockets.emit('reload')
           }
         //}

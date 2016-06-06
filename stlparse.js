@@ -118,7 +118,7 @@ export function StlParser() {
     let mixin_name = scan_word(s)
     log('in-rule mixin call',mixin_name)
     if (rule_index[mixin_name]) {
-      //log('found top-level rule for mixin')
+      log('found top-level rule for mixin')
       let origin = rule_index[mixin_name]
       let decls = []
       for (let name in origin.decls) {
@@ -127,7 +127,7 @@ export function StlParser() {
       }
       return decls
     } else {
-      //log('no top-level rule found for mixin')
+      log('no top-level rule found for mixin')
       return []
     }
   }
@@ -395,13 +395,14 @@ export function StlParser() {
       toks = cache.toks
     else
       toks = tokenize(fn, cache.str)*/
-    /*let toks = pipeline.tokenize(fn)
+
+    let toks = pipeline.tokenize(fn)
     //dumpTokens(toks)
     //dumpLinesFlags(str, toks)
     var s2 = new TokStream(toks)
-    let ast = parse(s2)*/
+    let ast = parse(s2)
 
-    let ast = pipeline.parse(fn)
+    //let ast = pipeline.parse(fn)
     return ast
   }
 
@@ -438,6 +439,7 @@ export function StlParser() {
           let sel = csel[0]
           if (sel.classes.length == 1) {
             let cname = sel.classes[0]
+            //log('add new top-level rule '+cname)
             rule_index[cname] = rule
           }
         }
