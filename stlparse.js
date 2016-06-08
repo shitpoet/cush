@@ -99,7 +99,9 @@ export function StlParser() {
         s.skip('-')
         params += '(max-width: '+bp+'px)'
       } else {
-        // default - desktop first
+        /*// mobile first
+        params += '(min-width: '+bp+'px)'*/
+        // desktop first
         params += '(max-width: '+bp+'px)'
       }
     } else {
@@ -355,6 +357,9 @@ export function StlParser() {
       }
     } else if (at_mixin_call(s)) { // (s.s=='+' && is_id(s.t2)) {
       return parse_mixin_call(rule, s)
+    } else if (s.s==';') {
+      s.skip(';')
+      return null
     } else {
       throw s.error('parse_decl: prop name expected but '+s.s+' found')
     }
