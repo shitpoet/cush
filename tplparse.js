@@ -313,6 +313,7 @@ export function TplParser() {
       node.text += s.shift().s
     }
     //log('text',node.text)
+    node.text = node.text.trim()
     node.endTok = s.t.prev
     return node
   }
