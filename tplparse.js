@@ -52,8 +52,8 @@ function new_node(parent) {
     wsAfter: undefined,
     wsIn: undefined,
     wsOut: undefined,
-    innerws: null,
-    outerws: null
+    //innerws: null,
+    //outerws: null
 
   })
 }
@@ -270,8 +270,19 @@ export function TplParser() {
   }
 
   fun parse_short_tag_body(node, s) {
-
-    if (s.t.line.obs > 0) {
+    if s.s==':'
+      log('inline body')
+      s.skip(':')
+      node.childs = parseChilds(node, s, '\n', true)
+      node.endTok = s.t
+      node.wsBefore = tt.nl
+      node.wsAfter = tt.nl
+      let n = node.childs.length
+      if (n > 0) node.childs[0].wsBefore = tt.nl
+      if (n > 0) node.childs[n-1].wsAfter = tt.nl
+      //node.wsIn = tt.nl
+      //node.wsOut = tt.nl
+    elif s.t.line.obs > 0
       //log('### '+s.t.line.s+' -- have '+s.t.line.obs+' obs')
       //log('with {} block')
       s.t.line.obs--
@@ -279,7 +290,7 @@ export function TplParser() {
       node.childs = parseChilds(node, s, '', true)
       node.endTok = s.t
       s.skip('}')
-    } else if (!node.tag.selfClosing) {
+    elif !node.tag.selfClosing
       //log('short tag without block')
       node.childs = parseChilds(node, s, '\n')
       //push_childs( node.childs, parse_text_node(parent, s) )
@@ -289,9 +300,9 @@ export function TplParser() {
       let n = node.childs.length
       if (n > 0) node.childs[0].startTok = null
       if (n > 0) node.childs[n-1].endTok = null
-    } else {
+    else
       //log('sefl closing')
-    }
+      ;
     return node
   }
 
@@ -406,8 +417,16 @@ export function TplParser() {
             !src.startsWith('//') &&
             !src.startsWith('../')
           ) {
-            node.attrs.src = 'img/'+node.attrs.src
+            src = 'img/'+node.attrs.src
+            node.attrs.src = src
           }
+          if (
+            !src.startsWith('data') &&
+            !(src.endsWith('.png') ||
+            src.endsWith('.jpg'))
+          )
+            src += '.png'
+            node.attrs.src = src
         }
       }
     }
@@ -443,8 +462,8 @@ export function TplParser() {
         let t = node.inTok
         //if (t.s=='>') t = t.next
         //if (t) {
-          if (is_nl(t)) nlIn = true
-          if (is_sp(t)) spIn = true
+        if (is_nl(t)) nlIn = true
+        if (is_sp(t)) spIn = true
         //}
       }
       if (node.outTok) {
@@ -480,9 +499,11 @@ export function TplParser() {
         wsIn ? 'before' :
         wsOut ? 'after' : null*/
       node.wsBefore = (nlBefore ? tt.nl : 0) | (spBefore ? tt.sp : 0)
-      node.wsAfter  = (nlAfter  ? tt.nl : 0) | (spAfter  ? tt.sp : 0)
-      node.wsIn     = (nlIn     ? tt.nl : 0) | (spIn     ? tt.sp : 0)
-      node.wsOut    = (nlOut    ? tt.nl : 0) | (spOut    ? tt.sp : 0)
+      node.wsAfter  = node.wsBefore
+      //node.wsAfter  = (nlAfter  ? tt.nl : 0) | (spAfter  ? tt.sp : 0)
+      //node.wsIn     = (nlIn     ? tt.nl : 0) | (spIn     ? tt.sp : 0)
+      //node.wsOut    = node.wsIn
+      //node.wsOut    = (nlOut    ? tt.nl : 0) | (spOut    ? tt.sp : 0)
       /*node.nlAfter  = nlAfter
       node.spBefore = spBefore
       node.spAfter  = spAfter
@@ -503,7 +524,12 @@ export function TplParser() {
 
   function postparse(node) {
     postparse_links(node)
+
     calcWs(node)
+
+    // custom postparse
+    //if fs.existsSync('posttpl.js'
+      //log('posttpl.js !!!!!!!!!!!!!')
   }
 
   var parse = this.parse = function(s) {

@@ -23,7 +23,7 @@ export let knownTags = {
   },
   a: {
     attrs: {
-      href: { type: 'url', main: true },
+      href: { type: 'url', main: true, alias: 'h' },
       download: {},
       target: {}
     }
@@ -94,14 +94,19 @@ export let knownTags = {
   },
   img: {
     selfClosing: true,
-    attrs: 'width, height, alt, src, srcset'
+    attrs: {
+      src: { alias: 's' }
+    },
+    otherAttrs: 'width, height, alt, srcset'
   },
   input: {
     selfClosing: true,
     attrs: {
-      placeholder: { alias: 'ph' }
+      name: { alias: 'n' },
+      placeholder: { alias: 'ph' },
+      type: { alias: 't' }
     },
-    otherAttrs: 'name type size checked? form formaction formenctype autocomplete autofocus autosave max maxlength min minlength multiple pattern readonly required? spellcheck step value width height disabled? onchange'
+    otherAttrs: 'size checked? form formaction formenctype autocomplete autofocus autosave max maxlength min minlength multiple pattern readonly required? spellcheck step value width height disabled? onchange'
   },
   //j k
   label: {

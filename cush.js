@@ -1,5 +1,10 @@
-module.exports = {
+export let projectInfo = {
   variables: {
-    'test': 'Vars!'
+    'test': 'Vars!',
+    items: [
+      '111',
+      '222',
+      '333'
+    ]
   }
 }

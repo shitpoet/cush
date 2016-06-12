@@ -88,7 +88,7 @@ export let TokStream = function(toks) {
     var fullMessage = fn+':'+ln+' '+message+'\n'
     //if (ln>0 && ln<=lines.length) {
       //var line = lines[ln-1]
-      fullMessage += line
+    fullMessage += line
     //}
     return fullMessage
   }

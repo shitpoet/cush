@@ -113,6 +113,8 @@ export function compileStyle(ast) {
     }
     walk_styles(ast, process_links, vars)
     walk_styles(ast, clean_fonts, vars)
+    if vars.process_stl
+      walk_styles(ast, vars.process_stl, vars)
     stringifyStyle(ast, out, vars, -1)
     return out.getText()
   }

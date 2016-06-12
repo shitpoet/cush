@@ -154,9 +154,9 @@ var tokenize = exports.tokenize = function(fn, str) {
     col++
     i++
     //if (i < n) {
-      ch  = s[i]
-      ch2 = s[i+1]
-      ch3 = s[i+2]
+    ch  = s[i]
+    ch2 = s[i+1]
+    ch3 = s[i+2]
     /*} else {
       ch = eof
       ch2 = eof

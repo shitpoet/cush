@@ -6,6 +6,9 @@ var autoprefixer = require('autoprefixer')
 var staticServer = new(require('node-static').Server)();
 //require('raptor-polyfill')
 let include = require('./include')
+
+console.time('load bunch of modules')
+
 include('error')
 include('common')
 include('pipeline')
@@ -15,6 +18,8 @@ include('tplparse')
 include('stlparse')
 include('tplcompile')
 include('stlcompile')
+
+console.timeEnd('load bunch of modules')
 
 
 //var view = hotload('./view.js')
@@ -184,6 +189,8 @@ export function respond(opts) {
         if (opts.onSetLastError) opts.onSetLastError('tpl', e)
       }
 
+      log(tpl)
+
       fs.writeFile(htmlPath, tpl)
 
       //log(opts);
@@ -240,12 +247,16 @@ export function respond(opts) {
       }
       if (opts.autoprefix) {
         log('apply autoprefix')
+        console.time('autoprefix')
         //var cleaner  = postcss([ autoprefixer({ add: false, browsers: [] }) ]);
         var pc = postcss([
           //require('postcss-rgba-hex'),
           autoprefixer({
-            browsers: ['last 2 versions', 'ios 5', 'android >= 2.1', 'ie 8', 'ie 9']
+            browsers: ['last 2 versions', 'ios 5', 'android >= 2.1', 'ie 9']
           })
+          /*autoprefixer({
+            browsers: ['last 2 versions', 'ios 5', 'android >= 2.1', 'ie 8', 'ie 9']
+          })*/
         ]);
         /*cleaner.process(stl).then(function (cleaned) {
           return prefixer.process(cleaned.css)
@@ -253,6 +264,7 @@ export function respond(opts) {
 
         pc.process(stl).then(function(result) {
           stl = result.css
+          console.timeEnd('autoprefix')
           res.end(stl)
           //console.log(stl);
           //log('putf',putFile)

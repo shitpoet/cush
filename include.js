@@ -1,4 +1,4 @@
-"use strict" // please
+"use strict"
 
 let hot = true
 //let hot = false
@@ -13,6 +13,15 @@ if (hot) chokidar = require('chokidar') // for hot reloading
 
 let Debug
 if (hot) Debug = v8debug.Debug
+
+let ffi = require('ffi')
+let libcrab = ffi.Library('/home/ors/lab/crab/libcrab.so', {
+  'read_and_rewrite': [ 'string', [ 'string' ] ]
+})
+function read_and_curlify(fn) {
+  return libcrab.read_and_rewrite(fn)
+}
+global.read_and_curlify = read_and_curlify
 
 let cache = new Map()
 
@@ -600,18 +609,25 @@ function rewrite(moduleName, code, opts) {
   return wrap_module(moduleName, code, exports, opts)
 }
 
-/*function rewrite_strict2(moduleName, code, reload) {
-  return code = "'use strict';" + code
-}*/
-
-//let rewrite = rewrite_closure
-//let rewrite = rewrite_strict
-
-/*function monkeyPatch(moduleName) {
-}*/
+function read_and_rewrite(fn, moduleName, opts) {
+  let code = read_and_curlify(fn)
+  let toks = tokenize(moduleName, code)
+  //log(code)
+  //dumpTokens(toks)
+  let patches = []
+  //patch_fun(toks, patches)
+  //patch_ifs(toks, patches)
+  //patch_imports(toks, patches)
+  let exports = patch_exports(toks, patches)
+  patch_seals(toks, patches)
+  code = apply_tok_patches(code, patches)
+  return wrap_module(moduleName, code, exports, opts)
+}
 
 function findScript(fn) {
+  log('v8debug: get scripts')
   let ss = Debug.scripts()
+  log('v8debug: filter scripts')
   ss = ss.filter(
     (s) => (
       typeof s.name == 'string' &&
@@ -624,20 +640,31 @@ function findScript(fn) {
 }
 
 function update(name) {
+  log('v8debug: update script '+name)
   let fn = name_to_fn(name)
-
+  log('v8debug: fn '+fn)
   //let fn = __dirname+"/"+name+".js"
+  log('v8debug: find script for '+fn)
   let script = findScript(fn)
   //log(script)
-
+  /*log('v8debug: read file '+fn)
   let code = fs.readFileSync(fn, 'utf8')
-  code = rewrite(name, code, true)
+  log('v8debug: rewrite')
+  code = rewrite(name, code, true)8?*/
+
+  console.time('rewrite c')
+  //log('original');log(code.trim())
+  let code = read_and_rewrite(fn, name, {})
+  console.timeEnd('rewrite c')
 
   ///////
 
+  log('v8debug: set script source')
   let cl = []
   Debug.LiveEdit.SetScriptSource(script, code, false, cl)
   //log(cl)
+
+  log('v8debug: done')
 }
 
 function name_to_fn(name) {
@@ -692,9 +719,18 @@ let include = global.include = module.exports = function(names, opts) {
         setInterval: setInterval
       }
       var context = new vm.createContext(sandbox)*/
+
+      /*console.time('rewrite js')
       let code = fs.readFileSync(fn, 'utf8')
       //log('original');log(code.trim())
       code = rewrite(name, code, opts)
+      console.timeEnd('rewrite js')*/
+
+      console.time('rewrite c')
+      //log('original');log(code.trim())
+      let code = read_and_rewrite(fn, name, opts)
+      console.timeEnd('rewrite c')
+
       //log('rewrited');log(code.trim())
       var script = new vm.Script(code, {filename: fn})
       //global[`__script_${name}`] = script

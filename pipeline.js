@@ -1,5 +1,7 @@
 let fs = require('fs')
 
+function log() { }
+
 export let pipeline = {
   _cache: {},
   /*reload(fn) {
@@ -45,7 +47,8 @@ export let pipeline = {
       return c[fn]
     } else {
       log('cache: '+fn+' is not cached')
-      let source = fs.readFileSync(fn,'utf8')
+      //let source = fs.readFileSync(fn,'utf8')
+      let source = read_and_curlify(fn)
       let entry = {
         mtime,
         source,

@@ -258,7 +258,8 @@ export let knownProps = {
         'row-reverse': {},
         column: {},
         'column-reverse': {}
-      }
+      },
+      autoAlias: true
     },
     alias: 'fd'
   },

@@ -6,7 +6,44 @@ function unwrap_class_name(name) {
     return name
 }
 
-function get_full_cname(node, name, for_parent) {
+// prefix=='' - no need for parent
+fun make_full_cname(prefix, name)
+  let full_name
+  if (prefix) prefix += '_'
+  if name.indexOf('--') > 0
+    let parts = name.split('--')
+    let base = parts.shift()
+    parts = parts.map( (mod) => base+'--'+mod )
+    parts.unshift(base)
+    parts = parts.map( (s) => prefix + s )
+    full_name = parts.join(' ')
+  else
+    full_name = prefix + name
+  return full_name
+
+fun get_full_cname(node, name)
+  if name.startsWith('_')
+    let parent = node.parent
+    while parent
+      if parent.classes.length > 0 && !parent.flags.wrapper
+        let parent_name = parent.classes[0]
+        if !parent_name.startsWith('_')
+          if parent_name.indexOf('--') > 0
+            parent_name = parent_name.split('--')[0]
+          return make_full_cname(parent_name, name)
+      parent = parent.parent
+    assert(false, 'no parent for '+name)
+  else
+    return make_full_cname('', name)
+
+/*
+  d c b { _a }         -->  b__a
+  d c b { __a }        -->  c__a
+  d c b { ___a }       -->  d__a
+  d c b--m { _a }      -->  b__a         - no modifier
+  d--n c b--m { ___a } -->  c__a    - no modifier
+*/
+/*function get_full_cname(node, name, for_parent) {
   if (name.startsWith('__')) {
     assert(node.parent.classes.length > 0,
       'parent node has no classes for '+name)
@@ -82,7 +119,7 @@ function get_full_cname(node, name, for_parent) {
       return name
     }
   }
-}
+}*/
 
 export function stringifyTemplate(ast, out, depth) {
   if (ast) {
@@ -118,6 +155,12 @@ export function stringifyTemplate(ast, out, depth) {
       out.nl()
     }
     if (ast.tag) {
+
+      log('%'+ast.tag.name +
+        (ast.classes ? '.'+ast.classes.join('.') : '') +
+        ((ast.wsBefore & tt.nl) ? ' nl-before ' : '') +
+        ((ast.wsAfter & tt.nl) ? ' nl-after ' : ''))
+
       var tagLine = ast.tag.name
       if (ast.id!='') {
         tagLine += ' id='+ast.id
@@ -144,11 +187,12 @@ export function stringifyTemplate(ast, out, depth) {
         out.write( ' '+attrs.join(' ') )
       }
       out.write( '>' )
-      if (ast.innerws=='block') {
+
+      /*if (ast.innerws=='block') {
         out.nl()
       } else if (ast.innerws=='spaces' || ast.innerws=='before') {
         out.sp()
-      }
+      }*/
     }
     if (ast.cmnt) {
       out.nl()
@@ -162,7 +206,7 @@ export function stringifyTemplate(ast, out, depth) {
       }*/
       var n = ast.childs.length
       let subdepth = depth+1
-      if (!ast.tag && !ast.cmnt && !ast.text)
+      if (!ast.tag) // && !ast.cmnt && !ast.text)
         subdepth = depth
       for (var i = 0; i < n; i++) {
         var child = ast.childs[i]
@@ -171,11 +215,11 @@ export function stringifyTemplate(ast, out, depth) {
       }
     }
     if (ast.tag) {
-      if (ast.innerws=='block') {
+      /*if (ast.innerws=='block') {
         out.nl()
       } else if (ast.innerws=='spaces' || ast.innerws=='after') {
         out.sp()
-      }
+      }*/
     }
     //var known = typeof knownTag != 'undefined'
     var selfClosing = ast.tag && ast.tag.selfClosing

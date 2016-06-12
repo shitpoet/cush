@@ -118,9 +118,9 @@ export function StlParser() {
   fun parse_mixin_call(rule, s) {
     s.skip('+')
     let mixin_name = scan_word(s)
-    log('in-rule mixin call',mixin_name)
+    //log('in-rule mixin call',mixin_name)
     if (rule_index[mixin_name]) {
-      log('found top-level rule for mixin')
+      //log('found top-level rule for mixin')
       let origin = rule_index[mixin_name]
       let decls = []
       for (let name in origin.decls) {
@@ -392,7 +392,7 @@ export function StlParser() {
     s.skip('include')
     s.skipSp()
     let name = s.shift().s
-    log('stl include '+name)
+    //log('stl include '+name)
     let fn = 'css/_'+name+'.stl'
     /*var cache = fileCache.get(fn)
     let toks

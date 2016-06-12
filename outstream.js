@@ -30,11 +30,13 @@ export let OutStream = function() {
     atNl = false
   }
   var sp = this.sp = function() {
-    //if (DEBUG) log('sp')
-    if (text!='') {
-      if (!text.endsWith(' ')) text += ' '
+    if (!atNl) {
+      //if (DEBUG) log('sp')
+      if (text!='') {
+        if (!text.endsWith(' ')) text += ' '
+      }
+      //atNl = false
     }
-    atNl = false
   }
   var nl = this.nl = function() {
     //if (DEBUG) log('nl')
