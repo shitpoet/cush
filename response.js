@@ -189,7 +189,7 @@ export function respond(opts) {
         if (opts.onSetLastError) opts.onSetLastError('tpl', e)
       }
 
-      log(tpl)
+      //log(tpl)
 
       fs.writeFile(htmlPath, tpl)
 

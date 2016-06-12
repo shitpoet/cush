@@ -71,6 +71,7 @@ fun unlogic_ast(node, scope) {
         let [var_name,array_name] = s.split(' of ')
         node.childs = []
         let for_scope = {
+          '_number': 1,
           [var_name]: undefined
         }
         scope.push(for_scope)
@@ -83,6 +84,7 @@ fun unlogic_ast(node, scope) {
           unlogic_ast(n, scope)
           //apply_scope(n, scope)
           node.childs.push(n)
+          for_scope['_number']++
         }
         scope.pop()
       }

@@ -458,15 +458,17 @@ export function TplParser() {
         }
         //log('startTok',node.startTok.s)
       }
-      if (node.inTok) {
+      // add NL before first line of included partials
+      if (node.parent == null) nlBefore = true
+      /*if (node.inTok) {
         let t = node.inTok
         //if (t.s=='>') t = t.next
         //if (t) {
         if (is_nl(t)) nlIn = true
         if (is_sp(t)) spIn = true
         //}
-      }
-      if (node.outTok) {
+      }*/
+      /*if (node.outTok) {
         //log('outTok',node.outTok.s)
         let t = node.outTok
         if (t.s=='<') t = t.prev
@@ -474,7 +476,7 @@ export function TplParser() {
           if (is_nl(t)) nlOut = true
           if (is_sp(t)) spOut = true
         }
-      }
+      }*/
       //log('nlIn spIn nlOut spOut', nlIn, spIn, nlOut, spOut)
       if (node.endTok) {
         let after = node.endTok.next
