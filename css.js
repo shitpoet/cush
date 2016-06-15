@@ -568,6 +568,7 @@ export let declAliases = {
   oh: 'overflow: hidden',
   ptr: 'cursor: pointer',
   pointer: 'cursor: pointer',
+  lc: 'text-transform: lowercase',
   // q
   rel: 'position: relative',
   row: 'display: table-row',

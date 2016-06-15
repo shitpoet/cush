@@ -1,5 +1,5 @@
 
-function unwrap_class_name(name) {
+function unwrap_cname(name) {
   if (name.endsWith('-wrap'))
     return name.split('-wrap')[0]
   else
@@ -21,12 +21,19 @@ fun make_full_cname(prefix, name)
     full_name = prefix + name
   return full_name
 
+fun get_cname(node, name)
+  if name!='_'
+    return name
+  else
+    return unwrap_cname(node.parent.classes[0])
+
 fun get_full_cname(node, name)
+  name = get_cname(node, name)
   if name.startsWith('_')
     let parent = node.parent
     while parent
       if parent.classes.length > 0 && !parent.flags.wrapper
-        let parent_name = parent.classes[0]
+        let parent_name = get_cname(parent, parent.classes[0])
         if !parent_name.startsWith('_')
           if parent_name.indexOf('--') > 0
             parent_name = parent_name.split('--')[0]
@@ -156,10 +163,10 @@ export function stringifyTemplate(ast, out, depth) {
     }
     if (ast.tag) {
 
-      log('%'+ast.tag.name +
+      /*log('%'+ast.tag.name +
         (ast.classes ? '.'+ast.classes.join('.') : '') +
         ((ast.wsBefore & tt.nl) ? ' nl-before ' : '') +
-        ((ast.wsAfter & tt.nl) ? ' nl-after ' : ''))
+        ((ast.wsAfter & tt.nl) ? ' nl-after ' : ''))*/
 
       var tagLine = ast.tag.name
       if (ast.id!='') {
