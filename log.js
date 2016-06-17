@@ -1,3 +1,5 @@
+function err(...args)
+  console.log(...args)
 function log(...args)
   if typeof logging == 'undefined' || logging
     console.log(...args)

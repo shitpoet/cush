@@ -75,15 +75,18 @@ var serverErrors = {}
 
 socket.on('error', function(data){
   //console.log('error on request '+data.url)
-  console.log(data)
+  console.error('server error', data)
   //alert(data.url+'\n\n'+data.message)
   //alert(data)
   var source = data.source
   var message = data.error
   var body = document.body
   if (message!==null) {
+    if (serverErrors[source])
+      serverErrors[source].el.remove()
     var errorEl = document.createElement('div')
     errorEl.style.position = 'fixed'
+    errorEl.style.zIndex = '9999999'
     errorEl.style.left = '0'
     errorEl.style.top = '0'
     errorEl.style.right = '0'
@@ -94,12 +97,15 @@ socket.on('error', function(data){
     errorEl.innerHTML = '<pre>'+message+'</pre>'
     errorEl.onclick = function(){
       body.removeChild(errorEl)
+      serverErrors[source] = null
     }
     body.appendChild(errorEl)
     serverErrors[source] = {message: message, el: errorEl}
   } else {
     if (serverErrors[source]) {
-      body.removeChild(serverErrors[source].el)
+      //body.removeChild(serverErrors[source].el)
+      serverErrors[source].el.remove()
+      serverErrors[source] = null
     }
   }
 })

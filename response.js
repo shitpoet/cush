@@ -24,25 +24,13 @@ include('stlcompile')
 
 timeEnd('load bunch of modules')
 
-/*fun log(...args)
-  if logging
-    console.log(...args)
-fun time(...args)
-  if timing
-    console.time(...args)
-fun timeEnd(...args)
-  if timing
-    console.timeEnd(...args)*/
-
-//var view = hotload('./view.js')
-
 //var projectJson = eval('('+fs.readFileSync('cush.json','utf8')+')')
 //var projectInfo = require(process.cwd()+'/cush.js')
 include(process.cwd()+'/cush')
 log('projectInfo',projectInfo)
 
 var lastTplPath='', lastTpl='', lastStlPath='', lastStl=''
-var lastCss='', lastHtml=''
+var lastCsss=[], lastHtmls=[]
 var lastPageVars = {}
 let tplParseError = null // was wo let......
 let stlParseError = null
@@ -183,22 +171,23 @@ export function respond(opts) {
         //tpl = renderTemplate(tplPath, tpl)
         tpl = renderTemplate(tplPath)
         //tpl = view.render(tplPath, tpl, lastStlPath, lastStl, [projectInfo.vars, pageVars], renderOpts).tpl
-        lastHtml = tpl
+        lastHtmls[tplPath] = tpl
+        //lastHtml = tpl
         /*if (renderOpts.skipPhpTags) {
           tpl = tpl.split('PHP_ECHO_VAR_TAG').join('<?php echo $')
           tpl = tpl.split('PHP_ECHO_TAG').join('<?php echo ')
           tpl = tpl.split('PHP_OPEN_TAG').join('<?php ')
           tpl = tpl.split('PHP_CLOSE_TAG').join('?>')
         }*/
-        if (opts.onSetLastError) opts.onSetLastError('tpl', null)
+        if (opts.onSetLastError) opts.onSetLastError(tplPath, null)
       } catch (e) {
-        log('catch tpl parse error')
+        err('catch tpl parse error')
         if (e.stack) e = e.stack
-        log(e)
-        tpl = lastHtml
+        err(e)
+        tpl = lastHtmls[tplPath]
         tplParseError = e
         //sendParseErrors()
-        if (opts.onSetLastError) opts.onSetLastError('tpl', e)
+        if (opts.onSetLastError) opts.onSetLastError(tplPath, e)
       }
 
       //log(tpl)
@@ -245,17 +234,17 @@ export function respond(opts) {
         //stl = view.render(lastTplPath, lastTpl, stlPath, stl, [projectInfo.vars, lastPageVars]).stl
         //stl = renderStyle(stlPath, stl)
         stl = renderStyle(stlPath)
-        lastCss = stl
-        if (opts.onSetLastError) opts.onSetLastError('stl', null)
+        lastCsss[stlPath] = stl
+        if (opts.onSetLastError) opts.onSetLastError(stlPath, null)
       } catch(e) {
         log('catch stl parse error')
         if (e.stack) e = e.stack
         log(e)
-        stl = lastCss
+        stl = lastCsss[stlPath]
         stlParseError = e
         //log('stlParseError',stlParseError)
         //sendParseErrors()
-        if (opts.onSetLastError) opts.onSetLastError('stl', e)
+        if (opts.onSetLastError) opts.onSetLastError(stlPath, e)
       }
       if (opts.autoprefix) {
         log('apply autoprefix')

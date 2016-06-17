@@ -15,14 +15,15 @@ let sio = null
 var lastServerErrors = {
 }
 
-function sendError(source, e) {
+function send_error(source, e) {
   sio.sockets.emit('error', {source: source, error: e})
 }
 
-function setLastServerError(source, e) {
-  lastServerErrors[source] = e
-  sendError(source, e)
-}
+fun setLastServerError(source, e)
+  let errs = lastServerErrors
+  if errs[source] != e
+    errs[source] = e
+    send_error(source, e)
 
 export let devServer = {
   listen: function(opts) {
@@ -43,10 +44,13 @@ export let devServer = {
           message: data
         });
       });
+      // resend erros on new connection
       for (var errorSource in lastServerErrors) {
         var e = lastServerErrors[errorSource]
-        sendError(errorSource, e)
-        lastServerErrors[errorSource] = null
+        if e
+          log('send error for '+errorSource)
+          send_error(errorSource, e)
+        //lastServerErrors[errorSource] = null
       }
     });
 
