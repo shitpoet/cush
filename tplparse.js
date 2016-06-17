@@ -340,7 +340,6 @@ export function TplParser() {
     s.skipSp()
     s.skip('(')
     node.condition = s.until(')')
-    //log({condition: node.condition)
     s.skip(')')
     s.skipSp()
     if (node.stmnt=='if') {

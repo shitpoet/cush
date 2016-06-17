@@ -69,6 +69,8 @@ fun unlogic_ast(node, scope) {
       } else if stmnt=='for' {
         let s = node.condition
         let [var_name,array_name] = s.split(' of ')
+        if var_name.startsWith('let ')
+          var_name = var_name.split(' ')[1]
         node.childs = []
         let for_scope = {
           '_number': 1,
