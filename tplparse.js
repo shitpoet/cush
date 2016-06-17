@@ -271,7 +271,6 @@ export function TplParser() {
 
   fun parse_short_tag_body(node, s) {
     if s.s==':'
-      log('inline body')
       s.skip(':')
       node.childs = parseChilds(node, s, '\n', true)
       node.endTok = s.t
@@ -341,6 +340,7 @@ export function TplParser() {
     s.skipSp()
     s.skip('(')
     node.condition = s.until(')')
+    //log({condition: node.condition)
     s.skip(')')
     s.skipSp()
     if (node.stmnt=='if') {

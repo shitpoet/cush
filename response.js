@@ -1,5 +1,8 @@
 //todo: decouple request processing from rendering
 
+let logging = false
+let timing = false
+
 //var hotload = require('hotload')
 var postcss = require('postcss')
 var autoprefixer = require('autoprefixer')
@@ -7,7 +10,7 @@ var staticServer = new(require('node-static').Server)();
 //require('raptor-polyfill')
 let include = require('./include')
 
-console.time('load bunch of modules')
+time('load bunch of modules')
 
 include('error')
 include('common')
@@ -19,8 +22,17 @@ include('stlparse')
 include('tplcompile')
 include('stlcompile')
 
-console.timeEnd('load bunch of modules')
+timeEnd('load bunch of modules')
 
+/*fun log(...args)
+  if logging
+    console.log(...args)
+fun time(...args)
+  if timing
+    console.time(...args)
+fun timeEnd(...args)
+  if timing
+    console.timeEnd(...args)*/
 
 //var view = hotload('./view.js')
 
@@ -73,7 +85,7 @@ fun renderStyle(fn, str) {
 }*/
 
 fun renderTemplate(fn) {
-  console.time('renderTemplate')
+  time('renderTemplate')
 
   /*let ast = pipeline.parse(fn)
   console.time('compileTemplate')
@@ -83,19 +95,19 @@ fun renderTemplate(fn) {
 
   let res = pipeline.render(fn, projectInfo.variables)
 
-  console.timeEnd('renderTemplate')
+  timeEnd('renderTemplate')
   return res
 }
 
 fun renderStyle(fn) {
-  console.time('renderStyle')
+  time('renderStyle')
   /*let ast = pipeline.parse(fn)
   console.time('compileStyle')
   var func = compileStyle(ast)
   let res = func(projectInfo.variables)
   console.timeEnd('compileStyle')*/
   let res = pipeline.render(fn, projectInfo.variables)
-  console.timeEnd('renderStyle')
+  timeEnd('renderStyle')
   return res
 }
 

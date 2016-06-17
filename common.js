@@ -9,7 +9,7 @@ export let util = require('util')
 var include = require('./include')
 
 export let assert = console.assert.bind(console)
-export let log = console.log.bind(console)
+//export let log = console.log.bind(console)
 
 /*function log_call() {
   var caller = log_call.caller

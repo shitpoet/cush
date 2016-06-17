@@ -14,7 +14,7 @@ process.on('uncaughtException', (e) => {
     console.log(' '.repeat(col-1) + '^\n')
   }
 
-  log('')
+  console.log('')
   let stack = e.stack
   if (typeof stack != typeof void 0) {
 

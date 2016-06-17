@@ -1,6 +1,7 @@
 let fs = require('fs')
 
-function log() { }
+let logging = false
+let timing = false
 
 export let pipeline = {
   _cache: {},
@@ -114,13 +115,13 @@ export let pipeline = {
       this.parse(fn)
       log('cache: '+fn+' is not compiled')
       if fn.endsWith('.tpl') {
-        console.time('compileTemplate')
+        time('compileTemplate')
         entry.code = compileTemplate(entry.ast)
-        console.timeEnd('compileTemplate')
+        timeEnd('compileTemplate')
       } else {
-        console.time('compileStyle')
+        time('compileStyle')
         entry.code = compileStyle(entry.ast)
-        console.timeEnd('compileStyle')
+        timeEnd('compileStyle')
       }
     }
     return entry.code
@@ -134,9 +135,9 @@ export let pipeline = {
     } else {
       this.compile(fn)
       log('cache: '+fn+' is not rendered')
-      console.time('pipeline.render')
+      time('pipeline.render')
       entry.str = entry.code(projectInfo.variables)
-      console.timeEnd('pipeline.render')
+      timeEnd('pipeline.render')
     }
     return entry.str
   },

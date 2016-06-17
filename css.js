@@ -559,6 +559,7 @@ export let declAliases = {
   flex: 'display: flex',
   // g h
   ib: 'display: inline-block',
+  ibb: 'display: inline-block; vertical-align: bottom',
   ibt: 'display: inline-block; vertical-align: top',
   ibm: 'display: inline-block; vertical-align: middle',
   italic: 'font-style: italic',

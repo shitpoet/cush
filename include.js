@@ -1,5 +1,17 @@
 "use strict"
 
+let logging = false
+function log(...args) {
+  if (logging) console.log(...args)
+}
+let timing = false
+function time(...args) {
+  if (timing) console.time(...args)
+}
+function timeEnd(...args) {
+  if (timing) console.timeEnd(...args)
+}
+
 let hot = true
 //let hot = false
 
@@ -429,6 +441,9 @@ function dumpTokens(toks) {
   }
 }
 
+let log_code = read_and_curlify(__dirname+'/log.js').split('\n').join(';')
+
+//console.log(log_code)
 
 // nodejs signature for wrapper:
 //   fun exports, require, module, __filename, __dirname
@@ -442,7 +457,8 @@ function wrap_module(name, code, exports, opts) {
       (name) => ('global.'+name+'='+name)
     ).join(';') +
     ';function __eval_here(code) { return eval(code) }' +
-    ";global['__eval_"+name+"'] = __eval_here"
+    ";global['__eval_"+name+"'] = __eval_here;"+
+    log_code;
   return '!function(){' + code + '}()'
 }
 
@@ -612,6 +628,7 @@ function rewrite(moduleName, code, opts) {
 function read_and_rewrite(fn, moduleName, opts) {
   let code = read_and_curlify(fn)
   let toks = tokenize(moduleName, code)
+  opts = opts ? opts : {}
   //log(code)
   //dumpTokens(toks)
   let patches = []
@@ -639,6 +656,18 @@ function findScript(fn) {
   return ss[0]
 }
 
+function update_source(script, code) {
+  try {
+    log('v8debug: set script source')
+    let cl = []
+    Debug.LiveEdit.SetScriptSource(script, code, false, cl)
+    //log(cl)
+  } catch(e) {
+    log('update script')
+    log(e)
+  }
+}
+
 function update(name) {
   log('v8debug: update script '+name)
   let fn = name_to_fn(name)
@@ -652,17 +681,14 @@ function update(name) {
   log('v8debug: rewrite')
   code = rewrite(name, code, true)8?*/
 
-  console.time('rewrite c')
+  time('rewrite c')
   //log('original');log(code.trim())
   let code = read_and_rewrite(fn, name, {})
-  console.timeEnd('rewrite c')
+  timeEnd('rewrite c')
 
   ///////
 
-  log('v8debug: set script source')
-  let cl = []
-  Debug.LiveEdit.SetScriptSource(script, code, false, cl)
-  //log(cl)
+  update_source(script, code)
 
   log('v8debug: done')
 }
@@ -691,7 +717,7 @@ let include = global.include = module.exports = function(names, opts) {
   for (let i = 0; i < names.length; i++) {
     let name = names[i]
     if (!(name in cache) || opts.reload) {
-      console.log(name+' ' + (opts.sloppy?'(sloppy)':''));
+      log(name+' ' + (opts.sloppy?'(sloppy)':''));
 
       global.require = require
       //global.exports = module.exports
@@ -726,10 +752,10 @@ let include = global.include = module.exports = function(names, opts) {
       code = rewrite(name, code, opts)
       console.timeEnd('rewrite js')*/
 
-      console.time('rewrite c')
+      time('rewrite c')
       //log('original');log(code.trim())
       let code = read_and_rewrite(fn, name, opts)
-      console.timeEnd('rewrite c')
+      timeEnd('rewrite c')
 
       //log('rewrited');log(code.trim())
       var script = new vm.Script(code, {filename: fn})
@@ -745,7 +771,7 @@ let include = global.include = module.exports = function(names, opts) {
         update(name)
       } else if (hot) {
         chokidar.watch(fn).on('change', function(path) {
-          console.log('script changed')
+          log('script changed')
           let opts = cache[name]
           cache.delete(name)
           opts.reload = true
@@ -756,7 +782,7 @@ let include = global.include = module.exports = function(names, opts) {
       /*__eval: global[__eval_+name]
       }*/
     } else {
-      console.log(name+' (cached)');
+      log(name+' (cached)');
     }
   }
 }
@@ -839,3 +865,4 @@ function K(obj) {
 */
 
 //todo: chokidar takes ~60 ms to start - consider sending message from editor
+

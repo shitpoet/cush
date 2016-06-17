@@ -5,7 +5,8 @@ do
   #node /home/ors/lab/cush/server.js "$@"
   #node /home/ors/lab/cush/devserver.js "$@"
   #node --harmony --harmony_destructuring --expose_debug_as=v8debug /home/ors/lab/cush/cli.js "$@"
-  node --harmony --harmony_destructuring_assignment --debug --expose_debug_as=v8debug ~/lab/cush/cli.js "$@"
+  #node --harmony --harmony_destructuring_assignment --debug --expose_debug_as=v8debug ~/lab/cush/cli.js "$@"
+  node --harmony_shipping --harmony_destructuring_assignment --debug --expose_debug_as=v8debug ~/lab/cush/cli.js "$@"
   #node-debug --harmony --harmony_destructuring_assignment --expose_debug_as=v8debug ~/lab/cush/cli.js "$@"
   OUT=$?
   #echo "exit code: $OUT"
