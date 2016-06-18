@@ -1,5 +1,3 @@
-"use strict"
-
 export let util = require('util')
 
 // make include function accessible to included modules
@@ -22,6 +20,7 @@ global.log_call = log_call*/
 export function getFile(fn) {
   return fs.readFileSync(fn,'utf8')
 }
+export let get_file = getFile
 
 export function exists(fn) {
   return fs.existsSync(fn)
@@ -38,3 +37,16 @@ if (!Array.prototype.last){
 };
 */
 
+if !Array.prototype.first
+  Object.defineProperty(Array.prototype, 'first', {
+    get: fun()
+      ret this[0]
+  });
+if !Array.prototype.last
+  Object.defineProperty(Array.prototype, 'last', {
+    get: fun()
+      ret this[this.length - 1]
+  });
+
+/*export fun is_undefined(x)
+  return typeof x === 'undefined'*/

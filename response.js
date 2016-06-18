@@ -181,9 +181,9 @@ export function respond(opts) {
         }*/
         if (opts.onSetLastError) opts.onSetLastError(tplPath, null)
       } catch (e) {
-        err('catch tpl parse error')
+        panic('catch tpl parse error')
         if (e.stack) e = e.stack
-        err(e)
+        panic(e)
         tpl = lastHtmls[tplPath]
         tplParseError = e
         //sendParseErrors()
@@ -237,9 +237,9 @@ export function respond(opts) {
         lastCsss[stlPath] = stl
         if (opts.onSetLastError) opts.onSetLastError(stlPath, null)
       } catch(e) {
-        log('catch stl parse error')
+        panic('catch stl parse error')
         if (e.stack) e = e.stack
-        log(e)
+        panic(e)
         stl = lastCsss[stlPath]
         stlParseError = e
         //log('stlParseError',stlParseError)

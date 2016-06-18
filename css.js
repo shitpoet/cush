@@ -482,7 +482,9 @@ export let knownProps = {
   },
   transform: {},
   'transform-origin': {},
-  transition: {},
+  transition: {
+    alias: 'trans'
+  },
   'unicode-range': {},
   'user-select': {
     args: {
@@ -554,6 +556,10 @@ export let declAliases = {
   dbg: 'background: #ffa',
   dbgg: 'background: #faf',
   dbggg: 'background: #aff',
+  dbgb: 'border: 1px solid #6565FF',
+  dbgbb: 'border: 1px solid red',
+  dbgo: 'outline: 4px solid #6565FF',
+  dbgoo: 'outline: 4px solid rgba(255,0,0,.5)',
   fr: 'float: right',
   fl: 'float: left',
   flex: 'display: flex',

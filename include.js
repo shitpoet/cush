@@ -663,8 +663,8 @@ function update_source(script, code) {
     Debug.LiveEdit.SetScriptSource(script, code, false, cl)
     //log(cl)
   } catch(e) {
-    log('update script')
-    log(e)
+    err('update script')
+    err(e)
   }
 }
 

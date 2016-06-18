@@ -331,7 +331,7 @@ export function StlParser() {
         let ss = declStr.split(/;\s*/)
         let decls = []
         for (let s of ss) {
-          let [name, value] = s.split(/[:\s]\s*/)
+          let [name, value] = s.split(/:\s*/)
           decls.push({name,value})
         }
         s.skipWs()
@@ -488,6 +488,8 @@ export function StlParser() {
     var rule = new_rule(null)
     //parse_ruleBody(rule, s)
     rule.childs = parse_nested_rules(rule, s)
+    if s.t
+      throw s.error('early end of parsing')
     return rule
   }
 }
