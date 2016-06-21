@@ -480,7 +480,9 @@ export let knownProps = {
     args: 'len',
     alias: 't'
   },
-  transform: {},
+  transform: {
+    alias: 'transf'
+  },
   'transform-origin': {},
   transition: {
     alias: 'trans'
@@ -569,6 +571,7 @@ export let declAliases = {
   ibt: 'display: inline-block; vertical-align: top',
   ibm: 'display: inline-block; vertical-align: middle',
   italic: 'font-style: italic',
+  jac: 'justify-content: center; align-items: center',
   justify: 'text-align: justify',
   // k l m
   nowrap: 'white-space: nowrap',

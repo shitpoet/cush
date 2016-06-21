@@ -42,11 +42,17 @@ if !Array.prototype.first
     get: fun()
       ret this[0]
   });
+
 if !Array.prototype.last
   Object.defineProperty(Array.prototype, 'last', {
     get: fun()
       ret this[this.length - 1]
   });
+
+Object.defineProperty(Array.prototype, 'len', {
+  get: fun()
+    ret this.length
+});
 
 /*export fun is_undefined(x)
   return typeof x === 'undefined'*/

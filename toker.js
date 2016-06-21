@@ -83,7 +83,7 @@ export let tt = {
   flags: 16384
 }
 
-function ttToString(mask) {
+export function ttToString(mask) {
   if (mask & tt.sol) mask -= tt.sol
   switch (mask) {
     case tt.sp: return 'sp';

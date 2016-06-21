@@ -84,9 +84,13 @@ export function TplParser() {
   fun parse_include(parent, s) {
     s.skip('+')
     s.skip('include')
-    s.skipSp()
+    s.skip_sp()
     let name = s.shift().s
     let fn = '_'+name+'.tpl'
+
+    s.skip_sp()
+    let attrs = parse_attrs(s, {}, {}, '')
+    //log(attrs)
 
     /*var str = fs.readFileSync(fn,'utf8')
     var toks = tokenize(fn, str)
@@ -100,6 +104,24 @@ export function TplParser() {
 
     var ts = new TokStream(toks)
     var ast = parse(ts)
+
+    if Object.keys(attrs).length > 0
+
+      //tofix: booleans are strings after parse_attrs....
+      //tofix: mb we need separate function to parse these parameters (f.ex. more javascriptish?)
+      for key in attrs
+        let val = attrs[key]
+        if val == 'true'
+          attrs[key] = true
+        if val == 'false'
+          attrs[key] = false
+
+      let scope = new SourceScope()
+      scope.push(attrs)
+      //log('include with scope');scope.dump()
+      _expand_ast(ast, scope)
+      _apply_scope(ast, scope)
+      fix_ast(ast)
 
     //ast.parent = parent
     /*for (let child of ast.childs) {
@@ -153,52 +175,45 @@ export function TplParser() {
       return s.shift().s
   }
 
-  function parse_attrs(node, s) {
-    let tag = node.tag
-    /*while (
-      tag.attrs[s.s] && (s.s2=='=' || tag.attrs[s.s].type=='boolean') ||
-      tag.attrAliases[s.s]
-      (tag.attrs[s.s
-      ||
-      s.s.startsWith('data-')
-    ) {*/
-    while (true) {
-      let isDataAttr = s.s.startsWith('data-')
-      let attrName = s.s
-      if (tag.attrAliases[attrName]) {
-        attrName = tag.attrAliases[attrName].name
-      }
-      let attr = tag.attrs[attrName]
+  fun parse_attrs(s, attrs, aliases, prefix)
+    let hash = {}
+    while s.at_id() {
+      let name = s.s
+      let has_prefix = name.startsWith(prefix)
+      if aliases[name]
+        name = aliases[name].name
+      let attr = attrs[name]
       //log(s.t2, s.t3)
-      if (s.s2=='=' || attr && attr.type=='boolean' || isDataAttr) {
-        //let attrName = s.id()
+      if s.s2=='=' || attr && attr.type=='boolean' || has_prefix
         s.shift() // skip attr name
-        let attrValue = null
+        let value = null
         //log('attr '+attrName)
         //let attr = tag.attrs[attrName]
-        if (attr || isDataAttr) {
-          if (s.trySkip('=')) { // parse value
-            attrValue = scanAttrValue(attr, s)
-          }
-          if (attrName=='id') {
-            if (node.id) {
-              throw s.error('duplicate id attr')
-            }
-            node.id = attrValue
-          } else if (attrName=='class') {
-            node.classes.push( attrValue )
-          } else {
-            node.attrs[attrName] = attrValue
-          }
-          s.skipSp()
-        } else {
-          throw s.error('unknown attr/attr-alias `'+attrName+'` for %'+node.tag.name)
-        }
-      } else {
+        if attr || has_prefix
+          if s.try_skip('=') // parse value
+            value = scanAttrValue(attr, s)
+          hash[name] = value
+          s.skip_sp()
+        else
+          throw s.error('unknown attr/attr-alias `'+attrName+'` for %')
+      else
         break
-      }
     }
-  }
+    return hash
+
+  function parse_tag_attrs(node, s, attrs, aliases)
+    if attrs == undefined
+      let tag = node.tag
+      attrs = tag.attrs
+      aliases = tag.attrAliases
+    node.attrs = parse_attrs(s, attrs, aliases, 'data-')
+    /*if (attrName=='id')
+      if node.id
+        throw s.error('duplicate id attr')
+      node.id = attrValue
+    elif (attrName=='class')
+      node.classes.push( attrValue )
+    else     */
 
   function parse_tag(parent, s) {
     let node = new_node(parent, s)
@@ -212,14 +227,21 @@ export function TplParser() {
       }
     }
     while (s.s=='.' || s.s=='#') {
-      if (!is_id(s.t2)) throw s.error('bad tag declaration')
-      if (s.trySkip('.')) {
+      //if (s.trySkip('.')) {
+        //log(s.s)
+        //if (s.s=='.' || s.s=='#') continue
+      if (s.s=='.')
+        while (s.trySkip('.'));
+        //if (!is_id(s.t)) throw s.error('bad tag class')
         node.classes.push( s.id() )
         if (!tagName) tagName = 'div'
-      } else if (s.trySkip('#')) {
+      //elif (s.trySkip('#'))
+      else
+        while (s.trySkip('#'));
+        //if (s.s=='.' || s.s=='#') continue
+        //if (!is_id(s.t2)) throw s.error('bad tag id')
         node.id = s.id()
         if (!tagName) tagName = 'div'
-      }
     }
     if (!tagName) throw s.error('bad tag declaration')
 
@@ -231,9 +253,9 @@ export function TplParser() {
     //log('tag',tagName)
     node.tag = knownTags[tagName]
     if (s.s!=':' && s.s2!=' ')  {
-      s.skipSp()
-      parse_attrs(node, s)
-      s.skipSp()
+      s.skip_sp()
+      parse_tag_attrs(node, s)
+      s.skip_sp()
     }
     //log('parsed tag: '+tagName+'.'+node.classes.join('.'))
     return node
@@ -242,7 +264,7 @@ export function TplParser() {
   function parseOpeningTag(parent, s) {
     s.skip('<')
     let node = parse_tag(parent, s)
-    s.skipSp()
+    s.skip_sp()
     s.skip('>')
     node.inTok = s.t
     return node
@@ -307,7 +329,7 @@ export function TplParser() {
 
   fun parse_short_tag(parent, s) {
     let node = parse_tag(parent, s)
-    s.skipSp()
+    s.skip_sp()
     return parse_short_tag_body(node, s)
   }
 
@@ -337,11 +359,11 @@ export function TplParser() {
   function parse_statement(parent, s) {
     let node = new_node(parent)
     node.stmnt = s.shift().s
-    s.skipSp()
+    s.skip_sp()
     s.skip('(')
     node.condition = s.until(')')
     s.skip(')')
-    s.skipSp()
+    s.skip_sp()
     if (node.stmnt=='if') {
       node.true_branch = new_node(parent)
       parse_short_tag_body(node.true_branch, s)
@@ -401,6 +423,7 @@ export function TplParser() {
   }
 
   fun postparse_links(node){
+    //if (node) {
     if (node.tag) {
       let tag_name = node.tag.name
       if tag_name=='a' {
@@ -433,8 +456,9 @@ export function TplParser() {
     if (node.false_branch) postparse_links(node.false_branch)
     if (node.loop_branch) postparse_links(node.loop_branch)
     for (let child of node.childs)
-      //if (child)
+      if (child)
         postparse_links(child)
+    //}
   }
 
   function calcWs(node) {
@@ -516,7 +540,8 @@ export function TplParser() {
     }
 
     for (var child of node.childs) {
-      calcWs(child)
+      if child // this stupid check if needed because of not very good things happening inside of tplcompile.expand_ast
+        calcWs(child)
     }
     if (node.true_branch) calcWs(node.true_branch)
     if (node.false_branch) calcWs(node.false_branch)

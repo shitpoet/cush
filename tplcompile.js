@@ -20,37 +20,41 @@ fun interpolate_string(str, scope) {
 
 // interpolate variables
 fun apply_scope(node, scope) {
-  if (node.id.indexOf('$')>=0) {
-    //log(node.text)
-    node.id = interpolate_string(node.id, scope)
-  }
-  //todo interpolate classes ?
-  for (let attrname in node.attrs) {
-    let attrval = node.attrs[attrname]
-    if (attrval.indexOf('$')>=0) {
-      node.attrs[attrname] = interpolate_string(attrval, scope)
+  if node
+    if 'id' in node
+      if (node.id.indexOf('$')>=0) {
+        //log(node.text)
+        node.id = interpolate_string(node.id, scope)
+      }
+    //todo interpolate classes ?
+    for (let attrname in node.attrs) {
+      let attrval = node.attrs[attrname]
+      if (attrval.indexOf('$')>=0) {
+        node.attrs[attrname] = interpolate_string(attrval, scope)
+      }
     }
-  }
-  if (node.text.indexOf('$')>=0) {
-    //log(node.text)
-    node.text = interpolate_string(node.text, scope)
-  }
-  /* during applying scope there can be problems
-     if inner elements introduce new variables
-     now we ignore these elements (only for loops
-     can introduce new variables now, so we do not
-     go for `loop_branch` but go for `true_branch` (if)) */
-  if (node.true_branch) {
-    //HACK: workaround (or right way???) to have correct interpolations for if-blocks inside of for-loops
-    node.true_branch = clone_node( node.true_branch )
-    apply_scope(node.true_branch, scope)
-  }
-  for (let child of node.childs) {
-    apply_scope(child, scope)
-  }
+    if (node.text.indexOf('$')>=0) {
+      //log(node.text)
+      node.text = interpolate_string(node.text, scope)
+    }
+    /* during applying scope there can be problems
+       if inner elements introduce new variables
+       now we ignore these elements (only for loops
+       can introduce new variables now, so we do not
+       go for `loop_branch` but go for `true_branch` (if)) */
+    if (node.true_branch) {
+      //HACK: workaround (or right way???) to have correct interpolations for if-blocks inside of for-loops
+      node.true_branch = clone_node( node.true_branch )
+      apply_scope(node.true_branch, scope)
+    }
+    for (let child of node.childs) {
+      apply_scope(child, scope)
+    }
 }
+export let _apply_scope = apply_scope;
 
-fun unlogic_ast(node, scope) {
+fun expand_ast(node, scope) {
+  //log('expand_ast'); scope.dump()
   if (node) {
     if (node.stmnt) {
       let stmnt = node.stmnt
@@ -64,7 +68,7 @@ fun unlogic_ast(node, scope) {
         n = clone_node(n, node.parent)
         node.childs = [n]
         for (let child of node.childs) {
-          unlogic_ast(child, scope)
+          expand_ast(child, scope)
         }
       } else if stmnt=='for' {
         let s = node.condition
@@ -83,7 +87,7 @@ fun unlogic_ast(node, scope) {
           let n = clone_node( node.loop_branch )
           for_scope[var_name] = var_val
           apply_scope(n, scope)
-          unlogic_ast(n, scope)
+          expand_ast(n, scope)
           //apply_scope(n, scope)
           node.childs.push(n)
           for_scope['_number']++
@@ -92,22 +96,64 @@ fun unlogic_ast(node, scope) {
       }
     } else {
       for (let child of node.childs) {
-        unlogic_ast(child, scope)
+        expand_ast(child, scope)
       }
     }
   }
 }
+export let _expand_ast = expand_ast;
+
+//tofix: avoid this ???
+// hacky func to disallow re-expanding
+export fun fix_ast(node)
+  if node
+    if node.stmnt
+      node.stmnt = ''
+    for child of node.childs
+      fix_ast(child)
 
 export fun compileTemplate(ast) {
 
   return function(vars) {
-    log('stringify ---------------------')
+    log('--- stringify tpl ---')
     var out = new OutStream()
     //ast.dump()
     let scope = new SourceScope()
     scope.push(vars)
-    unlogic_ast(ast, scope)
+    expand_ast(ast, scope)
     stringifyTemplate(ast, out, -1)
     return out.getText()
   }
 }
+
+/////////////////////////////////////////////////////////
+
+export fun __compileTemplate(ast) {
+  return fun(vars) {
+    /*var out = new OutStream()
+    //ast.dump()
+    let scope = new SourceScope()
+    scope.push(vars)
+    expand_ast(ast, scope)
+    stringifyTemplate(ast, out, -1)
+    return out.getText()*/
+    let code = 'compiled5'
+    return '<html>'+code+'</html>'
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

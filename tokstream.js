@@ -43,25 +43,29 @@ export let TokStream = function(toks) {
     }
   }
 
-  this.trySkip = function(s) {
+  this.try_skip = function(s) {
     if (this.t && this.t.s==s) {
       shift(); return true
     } else {
       return false
     }
   }
+  this.trySkip = this.try_skip
 
-  this.skipSp = function() {
+  this.skip_sp = this.skipSp = function() {
     while (self.t && is_sp(self.t)) shift()
   }
 
-  this.skipWs = function() {
+  this.skip_ws = this.skipWs = function() {
     while (self.t && is_ws(self.t)) shift()
   }
 
   /*this.skipCmnt = function() {
     while (self.t && is_cmnt(self.t)) shift()
   }*/
+
+  this.at_id = fun()
+    ret is_id(self.t)
 
   this.id = function() {
     if (is_id(self.t)) {
@@ -71,9 +75,10 @@ export let TokStream = function(toks) {
     }
   }
 
-  this.atLineStart = function() {
+  this.at_line_start = function() {
     return is_sol(this.t)
   }
+  this.atLineStart = this.at_line_start
 
   this.until = function(s) {
     let str = ''
@@ -81,7 +86,7 @@ export let TokStream = function(toks) {
     return str
   }
 
-  function formatMessage(message) {
+  function format_message(message) {
     var fn = self.t ? self.t.fn : t0 ? t0.fn : 'unknown'
     var ln = self.t ? self.t.ln : t0 ? t0.ln+'(?)' : '???'
     var line = self.t ? self.t.line.s : t0 ? t0.line.s : 'no source available'
@@ -94,11 +99,11 @@ export let TokStream = function(toks) {
   }
 
   var warn = this.warn = function(message) {
-    console.log('WARN '+formatMessage(message))
+    console.log('WARN '+format_message(message))
   }
 
   var error = this.error = function(message) {
-    return new Error(formatMessage(message))
+    return new Error(format_message(message))
   }
 
   if (n > 0) { self.t  = toks[0]; self.s  = self.t.s  }

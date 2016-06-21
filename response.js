@@ -182,9 +182,11 @@ export function respond(opts) {
         if (opts.onSetLastError) opts.onSetLastError(tplPath, null)
       } catch (e) {
         panic('catch tpl parse error')
+        handle_error(e)
         if (e.stack) e = e.stack
-        panic(e)
+        //panic(e)
         tpl = lastHtmls[tplPath]
+        if (!tpl) tpl = '<html></html>'
         tplParseError = e
         //sendParseErrors()
         if (opts.onSetLastError) opts.onSetLastError(tplPath, e)

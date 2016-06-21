@@ -5,6 +5,12 @@ let path = require('path')
 
 process.on('uncaughtException', (e) => {
 
+  handle_error(e)
+
+});
+
+export fun handle_error(e) {
+
   function output_source_line(fn,ln,col) {
     //console.log(fn+':'+ln)
     let dirname = path.dirname(fn)
@@ -41,6 +47,4 @@ process.on('uncaughtException', (e) => {
     console.log(e)
   }
   //process.exit()
-});
-
-
+}
