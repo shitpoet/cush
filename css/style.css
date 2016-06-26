@@ -1,0 +1,8 @@
+body {
+  font: 24px/1.2 monospace;
+}
+
+input:checked + span {
+  color: blue;
+}
+

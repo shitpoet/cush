@@ -195,7 +195,7 @@ export function TplParser() {
           hash[name] = value
           s.skip_sp()
         else
-          throw s.error('unknown attr/attr-alias `'+attrName+'` for %')
+          throw s.error('unknown attr/attr-alias `'+name+'` for %')
       else
         break
     }

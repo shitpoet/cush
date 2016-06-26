@@ -9,8 +9,11 @@
 
     parent - reference
 
-    csels - array of selectors:
-      {
+    csels - array of compound selectors:
+        csel, csel, csel ...
+      one csel is array of simple selectors:
+        ssel ssel ssel
+      ssel is described by {
         tag: reference to tag descriptor
         id: string
         classes: array of strings
@@ -47,6 +50,7 @@ export function StlParser() {
   let new_rule = (parent) => seal({
     parent,
     csels: [], // compound sels
+    rawsel: '', // complex sel as raw string (+ ~ >)
     decls: {},
     failbacks: {},
     childs: [],
@@ -54,8 +58,8 @@ export function StlParser() {
       name - font-face, media, charset etc
       params - query for @media
     } */,
-    cmnt: '',
-    raw: ''
+    cmnt: '', // cmnt before
+    raw: '' // raw content `...`
   })
 
   let new_simple_sel = () => seal({
@@ -155,14 +159,13 @@ export function StlParser() {
 
   function parse_simple_sel(rule, s) {
     let sel = new_simple_sel()
-    if (s.s==='*' || is_id(s.t)) {
+    if s.s==='*' || is_id(s.t) || s.s=='+' || s.s=='~'
       let id = s.shift().s
       if (knownTags[id]) {
         sel.tag = knownTags[id]
       } else {
         sel.classes.push(id)
       }
-    }
     while (s.s=='.' || s.s=='#') {
       if (s.trySkip('.')) {
         sel.classes.push( s.id() )

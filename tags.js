@@ -19,8 +19,10 @@ var knownAttrs = {
 
 export let knownTags = {
   '*': {
-    attrs: 'accesskey, class, hidden?, id, lang, title, tabindex, style, aria-label, aria-labelledby, aria-describedby, onclick onkeypress onkeyup onkeydown onmousewheel onmouseout itemscope?  itemtype itemprop'
+    attrs: 'accesskey, class, hidden?, id, lang, title, tabindex, style, aria-label, aria-labelledby, aria-describedby, onclick onkeypress onkeyup onkeydown onmousewheel onmouseout itemscope?  itemtype itemprop draggable'
   },
+  '+': {}, // combinator
+  '~': {}, // combinator
   a: {
     attrs: {
       href: { type: 'url', main: true, alias: 'h' },
@@ -46,7 +48,11 @@ export let knownTags = {
     attrs: 'cite'
   },
   button: {
-    attrs: 'autofocus? name type value disabled?'
+    attrs: {
+      name: { alias: 'n' },
+      type: { alias: 't' },
+    },
+    otherAttrs: 'autofocus? value disabled?'
   },
   canvas: {
     attrs: 'width height'
@@ -95,18 +101,21 @@ export let knownTags = {
   img: {
     selfClosing: true,
     attrs: {
-      src: { alias: 's' }
+      src: { alias: 's' },
+      width: { alias: 'w' },
+      height: { alias: 'h' },
     },
-    otherAttrs: 'width, height, alt, srcset'
+    otherAttrs: 'alt, srcset'
   },
   input: {
     selfClosing: true,
     attrs: {
       name: { alias: 'n' },
       placeholder: { alias: 'ph' },
-      type: { alias: 't' }
+      type: { alias: 't' },
+      value: { alias: 'v' }
     },
-    otherAttrs: 'size checked? form formaction formenctype autocomplete autofocus autosave max maxlength min minlength multiple pattern readonly required? spellcheck step value width height disabled? onchange'
+    otherAttrs: 'size checked? form formaction formenctype autocomplete autofocus autosave max maxlength min minlength multiple pattern readonly required? spellcheck step width height disabled? onchange'
   },
   //j k
   label: {
@@ -142,7 +151,10 @@ export let knownTags = {
     attrs: 'disabled?'
   },
   option: {
-    attrs: 'value disabled? selected?'
+    attrs: {
+      value: { alias: 'v' }
+    },
+    otherAttrs: 'disabled? selected?'
   },
   output: {
     attrs: 'for form name',
@@ -167,7 +179,10 @@ export let knownTags = {
   },
   section: {},
   select: {
-    attrs: 'name autofocus disabled? required? onchange'
+    attrs: {
+      name: { alias: 'n' }
+    },
+    otherAttrs: 'autofocus disabled? required? onchange'
   },
   source: {
     attrs: 'src srcset type media'

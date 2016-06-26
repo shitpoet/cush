@@ -99,7 +99,8 @@ export let knownProps = {
   'border-collapse': {
   },
   'border-color': {
-    args: 'color color color color'
+    args: 'color color color color',
+    alias: 'bc'
   },
   'border-radius': {
     args: 'len len len len',
@@ -398,7 +399,9 @@ export let knownProps = {
     alias: 'p',
     trblAliases: true
   },
-  'pointer-events': {},
+  'pointer-events': {
+    alias: 'pevs'
+  },
   position: {
     args: {
       type: 'enum',
@@ -576,7 +579,7 @@ export let declAliases = {
   // k l m
   nowrap: 'white-space: nowrap',
   oh: 'overflow: hidden',
-  ptr: 'cursor: pointer',
+  ptr: 'cursor: pointer; user-select: none',
   pointer: 'cursor: pointer',
   lc: 'text-transform: lowercase',
   // q
