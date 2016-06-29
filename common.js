@@ -56,3 +56,5 @@ Object.defineProperty(Array.prototype, 'len', {
 
 /*export fun is_undefined(x)
   return typeof x === 'undefined'*/
+
+include('log')

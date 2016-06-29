@@ -441,7 +441,7 @@ function dumpTokens(toks) {
   }
 }
 
-let log_code = read_and_curlify(__dirname+'/log.js').split('\n').join(';')
+//let log_code = read_and_curlify(__dirname+'/log.js').split('\n').join(';')
 
 //console.log(log_code)
 
@@ -457,8 +457,8 @@ function wrap_module(name, code, exports, opts) {
       (name) => ('global.'+name+'='+name)
     ).join(';') +
     ';function __eval_here(code) { return eval(code) }' +
-    ";global['__eval_"+name+"'] = __eval_here;"+
-    log_code;
+    ";global['__eval_"+name+"'] = __eval_here;"
+    //+log_code;
   return '!function(){' + code + '}()'
 }
 

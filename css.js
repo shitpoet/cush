@@ -287,6 +287,7 @@ export let knownProps = {
     args: 'len',
     alias: 'fs'
   },
+  'font-size-adjust': {},
   'font-style': {
     alias: 'fst',
   },
@@ -564,7 +565,8 @@ export let declAliases = {
   dbgb: 'border: 1px solid #6565FF',
   dbgbb: 'border: 1px solid red',
   dbgo: 'outline: 4px solid #6565FF',
-  dbgoo: 'outline: 4px solid rgba(255,0,0,.5)',
+  dbgoo: 'outline: 4px solid #EB9316',
+  dbgooo: 'outline: 4px solid #34A853',
   fr: 'float: right',
   fl: 'float: left',
   flex: 'display: flex',
@@ -573,6 +575,7 @@ export let declAliases = {
   ibb: 'display: inline-block; vertical-align: bottom',
   ibt: 'display: inline-block; vertical-align: top',
   ibm: 'display: inline-block; vertical-align: middle',
+  iflex: 'display: inline-flex',
   italic: 'font-style: italic',
   jac: 'justify-content: center; align-items: center',
   justify: 'text-align: justify',

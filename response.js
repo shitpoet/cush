@@ -1,7 +1,7 @@
 //todo: decouple request processing from rendering
 
-let logging = false
-let timing = false
+let logging = true
+let timing = true
 
 //var hotload = require('hotload')
 var postcss = require('postcss')
@@ -27,9 +27,9 @@ timeEnd('load bunch of modules')
 //var projectJson = eval('('+fs.readFileSync('cush.json','utf8')+')')
 //var projectInfo = require(process.cwd()+'/cush.js')
 include(process.cwd()+'/cush')
-log('projectInfo',projectInfo)
+//log('projectInfo',projectInfo)
 
-var lastTplPath='', lastTpl='', lastStlPath='', lastStl=''
+var lastTplPath='', lastStlPath=''
 var lastCsss=[], lastHtmls=[]
 var lastPageVars = {}
 let tplParseError = null // was wo let......
@@ -94,7 +94,7 @@ fun renderStyle(fn) {
   var func = compileStyle(ast)
   let res = func(projectInfo.variables)
   console.timeEnd('compileStyle')*/
-  let res = pipeline.render(fn, projectInfo.variables)
+  let res = pipeline.postprocess(fn, projectInfo.variables)
   timeEnd('renderStyle')
   return res
 }
@@ -106,6 +106,14 @@ export function respond(opts) {
       recursiveRender: !projectInfo.variables.phpMode
     }
     //log('render opts',renderOpts)
+
+
+
+
+
+
+
+
 
     //console.log('HTTP '+req.url)
     var url = req.url
@@ -152,12 +160,13 @@ export function respond(opts) {
       } else {
         log('template '+tplPath)
       }
-      var tpl = pipeline.get(tplPath).source
+      //var tpl = pipeline.get(tplPath).source
+      var tpl
       res.writeHead(200, {"Content-Type": "text/html"})
       //log('---------------------------')
       //log(tpl)
       //log('---------------------------')
-      lastTplPath = tplPath, lastTpl = tpl
+      lastTplPath = tplPath
       lastPageVars = pageVars
       try {
         /*if (renderOpts.skipPhpTags) {
@@ -230,8 +239,9 @@ export function respond(opts) {
       res.setHeader("Expires", "0"); // Proxies.
       res.writeHead(200, {"Content-Type": "text/css"})
 
-      var stl = pipeline.get(stlPath).source
-      lastStlPath = stlPath, lastStl = stl
+      //var stl = pipeline.get(stlPath).source
+      var stl
+      lastStlPath = stlPath
       try {
         //stl = view.render(lastTplPath, lastTpl, stlPath, stl, [projectInfo.vars, lastPageVars]).stl
         //stl = renderStyle(stlPath, stl)
@@ -305,3 +315,31 @@ export function respond(opts) {
     }
   }
 }
+
+
+
+function getStack() {
+  // Save original Error.prepareStackTrace
+  var origPrepareStackTrace = Error.prepareStackTrace
+
+  // Override with function that just returns `stack`
+  Error.prepareStackTrace = function (_, stack) {
+    return stack
+  }
+
+  // Create a new `Error`, which automatically gets `stack`
+  var err = new Error()
+
+  // Evaluate `err.stack`, which calls our new `Error.prepareStackTrace`
+  var stack = err.stack
+
+  // Restore original `Error.prepareStackTrace`
+  Error.prepareStackTrace = origPrepareStackTrace
+
+  // Remove superfluous function call on stack
+  stack.shift() // getStack --> Error
+
+  return stack
+}
+
+

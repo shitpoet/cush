@@ -1,6 +1,6 @@
 let fs = require('fs')
 
-let logging = false
+let logging = true
 let timing = false
 
 export let pipeline = {
@@ -37,7 +37,8 @@ export let pipeline = {
     }
   },
 
-  get(fn) {
+  // get existing or new create cache entry for file
+  get_entry(fn) {
     let c = this._cache
     let mtime = fs.statSync(fn).mtime.toString()
     if (
@@ -65,7 +66,7 @@ export let pipeline = {
 
   tokenize(fn) {
     let c = this._cache
-    let entry = this.get(fn)
+    let entry = this.get_entry(fn)
     if (!entry.toks) {
       log('cache: '+fn+' is not tokenized')
       entry.toks = tokenize(fn, entry.source)
@@ -86,7 +87,7 @@ export let pipeline = {
 
   parse(fn) {
     let c = this._cache
-    let entry = this.get(fn)
+    let entry = this.get_entry(fn)
     if (entry.ast) {
       log('cache: '+fn+' is parsed')
     } else {
@@ -108,7 +109,7 @@ export let pipeline = {
 
   compile(fn) {
     let c = this._cache
-    let entry = this.get(fn)
+    let entry = this.get_entry(fn)
     if (entry.code!==null) {
       log('cache: '+fn+' is compiled')
     } else {
@@ -129,7 +130,7 @@ export let pipeline = {
 
   render(fn, vars) {
     let c = this._cache
-    let entry = this.get(fn)
+    let entry = this.get_entry(fn)
     if (entry.str!==null) {
       log('cache: '+fn+' is rendered')
     } else {
@@ -140,6 +141,20 @@ export let pipeline = {
       timeEnd('pipeline.render')
     }
     return entry.str
+  },
+
+  postprocess(fn, vars, opts) {
+    let entry = this.get_entry(fn)
+    if entry.poststr!==null
+      log('cache: '+fn+' is postprocessed')
+    else
+      this.render(fn, vars)
+      log('cache: '+fn+' is not postprocessed')
+      if fn.endsWith('.stl')
+        time('pipeline: postprocess')
+        //// do autopref ///////
+        timeEnd('pipeline: postprocess')
+    return entry.poststr
   },
 
   clearCache() {
