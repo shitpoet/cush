@@ -37,6 +37,11 @@ if (!Array.prototype.last){
 };
 */
 
+Object.defineProperty(String.prototype, 'len', {
+  get: fun()
+    ret this.length
+});
+
 if !Array.prototype.first
   Object.defineProperty(Array.prototype, 'first', {
     get: fun()

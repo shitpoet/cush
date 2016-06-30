@@ -5,6 +5,9 @@ let logging = {
   'devserver': {
     log: ' ',
     //ignore: ''
+  },
+  log: {
+    log: false
   }
 }
 
@@ -37,6 +40,13 @@ fun get_caller_module_name()
 
 let max_mn_len = 0
 
+fun lpad(s, w)
+  let n = s.length
+  let m = w - n
+  if m > 0
+    s = ' '.repeat(m) + s
+  ret s
+
 fun rpad(s, w)
   let n = s.length
   let m = w - n
@@ -64,6 +74,7 @@ export fun log(...args)
       )
     )
   ) || !(mn in logging))
+    //if !(mn in logging)) { mn += '*' } // what to do???
     args.unshift(colors.gray(rpad(mn, max_mn_len)))
     console.log(...args)
 
@@ -73,8 +84,37 @@ export fun panic(...args)
   console.log(...args)
 let err = panic
 export fun time(...args)
-  //if typeof timing == 'undefined' || timing
-  console.time(...args)
+  let mn = get_caller_module_name()
+  if (mn in logging && (
+    logging[mn]===true || (
+      typeof logging[mn] == 'object' && (
+        (
+          logging[mn].log===true ||
+          !('log' in logging[mn])
+        ) && (
+          !('time' in logging[mn]) ||
+          logging[mn].time===true
+        )
+      )
+    )
+  ) || !(mn in logging))
+    console.time(...args)
 export fun timeEnd(...args)
-  //if typeof timing == 'undefined' || timing
-  console.timeEnd(...args)
+  let mn = get_caller_module_name()
+  if (mn in logging && (
+    logging[mn]===true || (
+      typeof logging[mn] == 'object' && (
+        (
+          logging[mn].log===true ||
+          !('log' in logging[mn])
+        ) && (
+          !('time' in logging[mn]) ||
+          logging[mn].time===true
+        )
+      )
+    )
+  ) || !(mn in logging))
+    console.timeEnd(...args)
+
+time('xxx')
+timeEnd('xxx')
