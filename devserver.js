@@ -9,6 +9,8 @@
 
 var chokidar = require('chokidar')
 require('./include')('server')
+include('pipeline')
+include('prefix')
 
 let sio = null
 
@@ -27,6 +29,9 @@ fun setLastServerError(source, e)
 
 export let devServer = {
   listen: function(opts) {
+    if opts.autoprefix
+      pipeline.add_post('stl', autoprefix_css)
+
     sio = require('socket.io')(opts.port+1)
 
     opts.onSetLastError = setLastServerError

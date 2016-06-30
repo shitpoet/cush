@@ -1,11 +1,5 @@
 //todo: decouple request processing from rendering
 
-let logging = true
-let timing = true
-
-//var hotload = require('hotload')
-var postcss = require('postcss')
-var autoprefixer = require('autoprefixer')
 var staticServer = new(require('node-static').Server)();
 //require('raptor-polyfill')
 let include = require('./include')
@@ -94,7 +88,7 @@ fun renderStyle(fn) {
   var func = compileStyle(ast)
   let res = func(projectInfo.variables)
   console.timeEnd('compileStyle')*/
-  let res = pipeline.postprocess(fn, projectInfo.variables)
+  let res = pipeline.render(fn, projectInfo.variables)
   timeEnd('renderStyle')
   return res
 }
@@ -250,54 +244,18 @@ export function respond(opts) {
         if (opts.onSetLastError) opts.onSetLastError(stlPath, null)
       } catch(e) {
         panic('catch stl parse error')
-        if (e.stack) e = e.stack
-        panic(e)
+        handle_error(e)
+        //panic(e)
         stl = lastCsss[stlPath]
+        if (e.stack) e = e.stack
         stlParseError = e
         //log('stlParseError',stlParseError)
         //sendParseErrors()
         if (opts.onSetLastError) opts.onSetLastError(stlPath, e)
       }
-      if (opts.autoprefix) {
-        log('apply autoprefix')
-        console.time('autoprefix')
-        //var cleaner  = postcss([ autoprefixer({ add: false, browsers: [] }) ]);
-        var pc = postcss([
-          //require('postcss-rgba-hex'),
-          autoprefixer({
-            browsers: ['last 2 versions', 'ios 5', 'android >= 2.1', 'ie 9']
-          })
-          /*autoprefixer({
-            browsers: ['last 2 versions', 'ios 5', 'android >= 2.1', 'ie 8', 'ie 9']
-          })*/
-        ]);
-        /*cleaner.process(stl).then(function (cleaned) {
-          return prefixer.process(cleaned.css)
-        }).then(function (result) {*/
-
-        pc.process(stl).then(function(result) {
-          stl = result.css
-          console.timeEnd('autoprefix')
-          res.end(stl)
-          //console.log(stl);
-          //log('putf',putFile)
-          log('write',cssPath)
-          fs.writeFile(cssPath, stl)
-        }, function(error) {
-          //log(Object.keys(error.source))
-          log(error.toString())
-          /*log(error.message)
-          log('> '+source[line-1])
-          log('> '+source[line])
-          log('> '+source[line+1])*/
-        });
-      } else {
-        res.end(stl)
-        //log('fs.writeFile',cssPath)
-        //putFile(cssPath, stl)
-        log('write',cssPath)
-        fs.writeFile(cssPath, stl)
-      }
+      res.end(stl)
+      log('write',cssPath)
+      fs.writeFile(cssPath, stl)
     } else if (fn=='RELOAD.js') {
       res.writeHead(200, {"Content-Type": "text/javascript"})
       var code = ''
@@ -317,29 +275,5 @@ export function respond(opts) {
 }
 
 
-
-function getStack() {
-  // Save original Error.prepareStackTrace
-  var origPrepareStackTrace = Error.prepareStackTrace
-
-  // Override with function that just returns `stack`
-  Error.prepareStackTrace = function (_, stack) {
-    return stack
-  }
-
-  // Create a new `Error`, which automatically gets `stack`
-  var err = new Error()
-
-  // Evaluate `err.stack`, which calls our new `Error.prepareStackTrace`
-  var stack = err.stack
-
-  // Restore original `Error.prepareStackTrace`
-  Error.prepareStackTrace = origPrepareStackTrace
-
-  // Remove superfluous function call on stack
-  stack.shift() // getStack --> Error
-
-  return stack
-}
 
 

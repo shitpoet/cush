@@ -1,10 +1,11 @@
-let fs = require('fs')
+  let fs = require('fs')
 
 let logging = true
 let timing = false
 
 export let pipeline = {
   _cache: {},
+  _posts: {}, // postprocessors
   /*reload(fn) {
   },*/
   getStatus(fn) {
@@ -139,11 +140,16 @@ export let pipeline = {
       time('pipeline.render')
       entry.str = entry.code(projectInfo.variables)
       timeEnd('pipeline.render')
+      if fn.endsWith('.stl')
+        time('pipeline.postprocess')
+        for cb of this._posts['stl']
+          entry.str = cb(entry.str)
+        timeEnd('pipeline.postprocess')
     }
     return entry.str
   },
 
-  postprocess(fn, vars, opts) {
+  /*postprocess(fn, vars, opts) {
     let entry = this.get_entry(fn)
     if entry.poststr!==null
       log('cache: '+fn+' is postprocessed')
@@ -154,11 +160,22 @@ export let pipeline = {
         time('pipeline: postprocess')
         //// do autopref ///////
         timeEnd('pipeline: postprocess')
+      //entry.poststr = entry.str
     return entry.poststr
-  },
+  },*/
 
   clearCache() {
     log('cache: clear')
     this._cache = {}
-  }
+  },
+
+  //registerStage
+
+  add_post(fmt, cb)
+    l('add_post')
+    if !(fmt in this._posts)
+      this._posts[fmt] = []
+    if !this._posts[fmt].includes(cb)
+      this._posts[fmt].push(cb)
+
 }

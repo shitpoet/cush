@@ -28,10 +28,10 @@ if (hot) Debug = v8debug.Debug
 
 let ffi = require('ffi')
 let libcrab = ffi.Library('/home/ors/lab/crab/libcrab.so', {
-  'read_and_rewrite': [ 'string', [ 'string' ] ]
+  'read_and_rewrite': [ 'string', [ 'string', 'bool' ] ]
 })
 function read_and_curlify(fn) {
-  return libcrab.read_and_rewrite(fn)
+  return libcrab.read_and_rewrite(fn, false)
 }
 global.read_and_curlify = read_and_curlify
 

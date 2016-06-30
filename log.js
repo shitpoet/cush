@@ -1,14 +1,13 @@
 var colors = require('colors/safe');
 
 let logging = {
+  'devserver': true,
   'pipeline': true,
   'devserver': {
     log: ' ',
     //ignore: ''
   },
-  log: {
-    log: false
-  }
+  'log': true
 }
 
 export function get_stack() {
@@ -23,11 +22,11 @@ export function get_stack() {
   return stack
 }
 
-fun get_caller_module_fn()
+fun get_caller_module_fn(depth)
   let stack = get_stack()
   //stack.shift()
   //stack.shift()
-  ret stack[3].getFileName()
+  ret stack[depth].getFileName()
 
 fun get_file_name(path)
   ret path.split('/').pop()
@@ -35,10 +34,8 @@ fun get_file_name(path)
 fun wo_ext(fn)
   ret fn.split('.').shift()
 
-fun get_caller_module_name()
-  ret wo_ext(get_file_name(get_caller_module_fn()))
-
-let max_mn_len = 0
+fun get_caller_module_name(depth)
+  ret wo_ext(get_file_name(get_caller_module_fn(depth)))
 
 fun lpad(s, w)
   let n = s.length
@@ -54,16 +51,16 @@ fun rpad(s, w)
     s = s + ' '.repeat(m)
   ret s
 
-/*log('get_stack')
-time('get_stack')
-for (let gs = 0; gs < 1000; gs++)
-  getStack()
-timeEnd('get_stack')*/
+let max_mn_len = 0
+
+fun get_log_mn()
+  let mn = get_caller_module_name(4)
+  if mn.length > max_mn_len { max_mn_len = mn.length }
+  return mn
 
 export fun log(...args)
   //if typeof logging == 'undefined' || logging
-  let mn = get_caller_module_name()
-  if mn.length > max_mn_len { max_mn_len = mn.length }
+  let mn = get_log_mn()
   //console.log(logging[mn])
   if (mn in logging && (
     logging[mn]===true || (
@@ -78,13 +75,17 @@ export fun log(...args)
     args.unshift(colors.gray(rpad(mn, max_mn_len)))
     console.log(...args)
 
-let l = log
+export let l = log
 
 export fun panic(...args)
+  let mn = get_log_mn()
+  args.unshift(colors.gray(rpad(mn, max_mn_len)))
   console.log(...args)
-let err = panic
+
+export let err = panic
+
 export fun time(...args)
-  let mn = get_caller_module_name()
+  let mn = get_log_mn()
   if (mn in logging && (
     logging[mn]===true || (
       typeof logging[mn] == 'object' && (
@@ -99,8 +100,9 @@ export fun time(...args)
     )
   ) || !(mn in logging))
     console.time(...args)
+
 export fun timeEnd(...args)
-  let mn = get_caller_module_name()
+  let mn = get_log_mn()
   if (mn in logging && (
     logging[mn]===true || (
       typeof logging[mn] == 'object' && (
@@ -116,5 +118,3 @@ export fun timeEnd(...args)
   ) || !(mn in logging))
     console.timeEnd(...args)
 
-time('xxx')
-timeEnd('xxx')
