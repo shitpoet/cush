@@ -2,8 +2,7 @@
 
   style sheet parser
 
-  gets tok tree
-  creates style tree
+  gets tok stream and creates style tree
 
   style node (rule) descriptor:
 
@@ -39,18 +38,19 @@ include('css')
 
 include('ext/pseudos')
 
+// top-level rules with simple selectors
+//tofix: global rule_index - can conain outdated rules
+let rule_index = {}
+
 export function StlParser() {
   let media_atrule_name = 'media'
   let fontface_atrule_name = 'font-face'
   let known_atrules = [media_atrule_name, fontface_atrule_name]
 
-  // top-level rules with simple selectors
-  let rule_index = {}
-
   let new_rule = (parent) => seal({
     parent,
     csels: [], // compound sels
-    rawsel: '', // complex sel as raw string (+ ~ >)
+    //rawsel: '', // complex sel as raw string (+ ~ >)
     decls: {},
     failbacks: {},
     childs: [],
@@ -59,7 +59,8 @@ export function StlParser() {
       params - query for @media
     } */,
     cmnt: '', // cmnt before
-    raw: '' // raw content `...`
+    raw: '', // raw content `...`
+    //pipeline_entry: null
   })
 
   let new_simple_sel = () => seal({
@@ -404,13 +405,17 @@ export function StlParser() {
     else
       toks = tokenize(fn, cache.str)*/
 
-    let toks = pipeline.tokenize(fn)
+    /*let toks = pipeline.tokenize(fn)
     //dumpTokens(toks)
     //dumpLinesFlags(str, toks)
-    var s2 = new TokStream(toks)
-    let ast = parse(s2)
 
-    //let ast = pipeline.parse(fn)
+    var s2 = new TokStream(toks)
+    let ast = parse(s2)*/
+
+    let ast = pipeline.parse(fn)
+    //ast.pipeline_entry = pipeline.get_entry(fn)*/
+
+    //tofix: ast.parent is invalid here ...
     return ast
   }
 

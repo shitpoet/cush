@@ -183,7 +183,7 @@ export function TplParser() {
       if aliases[name]
         name = aliases[name].name
       let attr = attrs[name]
-      //log(s.t2, s.t3)
+      log(name, s.s2, s.s3)
       if s.s2=='=' || attr && attr.type=='boolean' || has_prefix
         s.shift() // skip attr name
         let value = null

@@ -2,7 +2,15 @@ body {
   font: 24px/1.2 monospace;
 }
 
-input:checked + span {
+.base-rule {
+  color: blue;
+}
+
+.part-rule {
+  color: blue;
+}
+
+* {
   color: blue;
 }
 

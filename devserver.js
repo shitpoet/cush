@@ -86,7 +86,7 @@ export let devServer = {
           } else if (path.endsWith('.stl')) {
             if (path.split('/').pop().startsWith('_')) {
               log('partial style - clear cache') //tofix
-              pipeline.clearCache()
+              pipeline.clear_root_styles()
               // reload main style sheet
               sio.sockets.emit('reload style', 'css/style.css')
             } else {

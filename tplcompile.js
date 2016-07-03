@@ -29,7 +29,7 @@ fun apply_scope(node, scope) {
     //todo interpolate classes ?
     for (let attrname in node.attrs) {
       let attrval = node.attrs[attrname]
-      if (attrval.indexOf('$')>=0) {
+      if (attrval && attrval.indexOf('$')>=0) {
         node.attrs[attrname] = interpolate_string(attrval, scope)
       }
     }

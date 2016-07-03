@@ -141,10 +141,11 @@ export let pipeline = {
       entry.str = entry.code(projectInfo.variables)
       timeEnd('pipeline.render')
       if fn.endsWith('.stl')
-        time('pipeline.postprocess')
-        for cb of this._posts['stl']
-          entry.str = cb(entry.str)
-        timeEnd('pipeline.postprocess')
+        if 'stl' in this._posts
+          time('pipeline.postprocess')
+          for cb of this._posts['stl']
+            entry.str = cb(entry.str)
+          timeEnd('pipeline.postprocess')
     }
     return entry.str
   },
@@ -168,6 +169,14 @@ export let pipeline = {
     log('cache: clear')
     this._cache = {}
   },
+
+  clear_root_styles()
+    log('cache: clear toot styles')
+    let c = this._cache
+    for fn in c
+      if !fn.split('/').pop().startsWith('_')
+        delete this._cache[fn]
+  ,
 
   //registerStage
 

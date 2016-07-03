@@ -231,45 +231,53 @@ fun stringifyRule(prefix, rule, out, scope, depth) {
   var rule_depth = 0
   if (rule) {
 
-    if (rule.cmnt) {
-      out.nlnl()
-      out.write('/*'+rule.cmnt+'*/', rule_depth)
-      out.nlnl()
-    }
+    /*if (rule.pipeline_entry) {
 
-    if (rule.raw) {
-      out.nlnl()
-      //log('RAW "'+rule.raw+'"')
-      out.write(rule.raw.trim(), rule_depth)
-      out.nlnl()
-    }
+      out.write(pipeline.render rule.pipeline_entry
 
-    let have_sels = rule.csels && rule.csels.length > 0
-    if have_sels {
-      write_sels(rule, out, rule_depth)
-      write_block(rule, out, rule_depth)
-      out.nlnl()
-    } else if rule.atrule {
-      let {name,params} = rule.atrule
-      if name=='media' {
-        out.write(`@${name} ${params} {`, rule_depth)
-        out.nl()
-        write_sels(rule.parent, out, rule_depth+1)
-        write_block(rule, out, rule_depth+1)
-        out.nl()
-        out.write(`}`, rule_depth)
+    } else {*/
+
+      if (rule.cmnt) {
         out.nlnl()
-      } else {
-        out.write(`@${name} `, rule_depth)
-        write_block(rule, out, rule_depth)
+        out.write('/*'+rule.cmnt+'*/', rule_depth)
         out.nlnl()
       }
-    }
 
-    // nested rules
-    for child of rule.childs {
-      stringifyRule(prefix, child, out, scope, depth+1)
-    }
+      if (rule.raw) {
+        out.nlnl()
+        //log('RAW "'+rule.raw+'"')
+        out.write(rule.raw.trim(), rule_depth)
+        out.nlnl()
+      }
+
+      let have_sels = rule.csels && rule.csels.length > 0
+      if have_sels {
+        write_sels(rule, out, rule_depth)
+        write_block(rule, out, rule_depth)
+        out.nlnl()
+      } else if rule.atrule {
+        let {name,params} = rule.atrule
+        if name=='media' {
+          out.write(`@${name} ${params} {`, rule_depth)
+          out.nl()
+          write_sels(rule.parent, out, rule_depth+1)
+          write_block(rule, out, rule_depth+1)
+          out.nl()
+          out.write(`}`, rule_depth)
+          out.nlnl()
+        } else {
+          out.write(`@${name} `, rule_depth)
+          write_block(rule, out, rule_depth)
+          out.nlnl()
+        }
+      }
+
+      // nested rules
+      for child of rule.childs {
+        stringifyRule(prefix, child, out, scope, depth+1)
+      }
+
+    //}
   }
 }
 

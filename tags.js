@@ -113,9 +113,10 @@ export let knownTags = {
       name: { alias: 'n' },
       placeholder: { alias: 'ph' },
       type: { alias: 't' },
-      value: { alias: 'v' }
+      value: { alias: 'v' },
+      required: { type: 'boolean', alias: 'req' }
     },
-    otherAttrs: 'size checked? form formaction formenctype autocomplete autofocus autosave max maxlength min minlength multiple pattern readonly required? spellcheck step width height disabled? onchange'
+    otherAttrs: 'size checked? form formaction formenctype autocomplete autofocus autosave max maxlength min minlength multiple pattern readonly spellcheck step width height disabled? onchange'
   },
   //j k
   label: {
