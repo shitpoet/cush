@@ -94,7 +94,7 @@ socket.on('error', function(data){
     errorEl.style.padding = '10px'
     errorEl.style.background = 'white'
     errorEl.style.opacity = '.9'
-    errorEl.innerHTML = '<pre>'+message+'</pre>'
+    errorEl.innerHTML = '<xmp>'+message+'\n</xmp>'
     errorEl.onclick = function(){
       body.removeChild(errorEl)
       serverErrors[source] = null

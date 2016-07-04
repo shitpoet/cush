@@ -189,6 +189,7 @@ export let knownTags = {
     attrs: 'src srcset type media'
   },
   span: {},
+  small: {},
   strong: {},
   style: {
     attrs: 'src media'

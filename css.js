@@ -576,6 +576,7 @@ export let declAliases = {
   ibt: 'display: inline-block; vertical-align: top',
   ibm: 'display: inline-block; vertical-align: middle',
   iflex: 'display: inline-flex',
+  itable: 'display: inline-table',
   italic: 'font-style: italic',
   jac: 'justify-content: center; align-items: center',
   justify: 'text-align: justify',
