@@ -215,15 +215,28 @@ fun write_sels(rule, out, rule_depth) {
   out.write(strs.join(', ')+' ', rule_depth)
 }
 
+fun write_failbacks(decl_failbacks, out, rule_depth)
+  let prop_depth = rule_depth + 1
+  for decl of decl_failbacks
+    let name = decl.name
+    let value = decl.value
+    out.write(name+': '+value+';', prop_depth)
+    out.nl()
+
+fun write_decls(rule, decls, out, rule_depth)
+  let prop_depth = rule_depth + 1
+  for name in decls
+    if name in rule.failbacks
+      write_failbacks(rule.failbacks[name], out, rule_depth)
+    let value = decls[name].value
+    out.write(name+': '+value+';', prop_depth)
+    out.nl()
+
 fun write_block(rule, out, rule_depth) {
   let prop_depth = rule_depth + 1
   out.write('{', rule_depth)
   out.nl()
-  for name in rule.decls {
-    let value = rule.decls[name].value
-    out.write(name+': '+value+';', prop_depth)
-    out.nl()
-  }
+  write_decls(rule, rule.decls, out, rule_depth)
   out.write('}', rule_depth);
 }
 

@@ -181,9 +181,10 @@ export let knownTags = {
   section: {},
   select: {
     attrs: {
-      name: { alias: 'n' }
+      name: { alias: 'n' },
+      required: { type: 'boolean', alias: 'req' }
     },
-    otherAttrs: 'autofocus disabled? required? onchange'
+    otherAttrs: 'autofocus disabled? onchange'
   },
   source: {
     attrs: 'src srcset type media'

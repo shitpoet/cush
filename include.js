@@ -27,11 +27,12 @@ let Debug
 if (hot) Debug = v8debug.Debug
 
 let ffi = require('ffi')
-let libcrab = ffi.Library('/home/ors/lab/crab/libcrab.so', {
+let libskim = ffi.Library('/home/ors/lab/skim/libskim.so', {
   'read_and_rewrite': [ 'string', [ 'string', 'bool' ] ]
 })
-function read_and_curlify(fn) {
-  return libcrab.read_and_rewrite(fn, false)
+function read_and_curlify(fn, expand) {
+  expand = expand || false
+  return libskim.read_and_rewrite(fn, expand)
 }
 global.read_and_curlify = read_and_curlify
 

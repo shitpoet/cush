@@ -64,44 +64,50 @@ export let devServer = {
       chokidar.watch([
         __dirname+'/*.js', //buggy: causes generation of unlinkDir and bugs with on 'all' events listener
         '*.tpl','*.stl','css/*.stl',
-        '*.js','*.json','js/*.js'
+        '*.js','*.json','js/*.js',
+        'js/*.ws'
       ]).on('change', function(path) {
         var event = 'change'
         //if (event!='add' && event!='unlinkDir') {
-          console.log('watcher: '+event, path)
-          if (path.endsWith('.js')) {
-            log('reload js')
+        console.log('watcher: '+event, path)
+        if path.endsWith('.js')
+          log('reload js')
+          pipeline.clearCache()
+          sio.sockets.emit('reload')
+        elif path.endsWith('.ws')
+          log('reload ws')
+          let js_path = path.replace(/\.ws$/, '.js')
+          fs.writeFileSync(js_path, read_and_curlify(path, true))
+          sio.sockets.emit('reload')
+        else if (path.startsWith(__dirname)) { // cush itself
+          //log('restart')
+          //process.exit(5)
+          sio.sockets.emit('reload')
+        } else if (path.endsWith('.tpl')) {
+          if (path.startsWith('_')) {
+            log('partial template - clear cache') //tofix
             pipeline.clearCache()
-            sio.sockets.emit('reload')
-          } else if (path.startsWith(__dirname)) { // cush itself
-            //log('restart')
-            //process.exit(5)
-            sio.sockets.emit('reload')
-          } else if (path.endsWith('.tpl')) {
-            if (path.startsWith('_')) {
-              log('partial template - clear cache') //tofix
-              pipeline.clearCache()
-            }
-            sio.sockets.emit('reload')
-          } else if (path.endsWith('.stl')) {
-            if (path.split('/').pop().startsWith('_')) {
-              log('partial style - clear cache') //tofix
-              pipeline.clear_root_styles()
-              // reload main style sheet
-              sio.sockets.emit('reload style', 'css/style.css')
-            } else {
-              sio.sockets.emit('reload style', path.replace('.stl','.css'))
-            }
-          } else if (path.endsWith('cush.json')) {
-            log('reload json')
-            projectJson = eval('('+fs.readFileSync('cush.json','utf8')+')')
-            styleVars = projectJson.variables
-            templateVars = styleVars
-            sio.sockets.emit('reload')
-          } else {
-            log('unk watched resource changed: '+path)
-            sio.sockets.emit('reload')
           }
+          sio.sockets.emit('reload')
+        } else if (path.endsWith('.stl')) {
+          if (path.split('/').pop().startsWith('_')) {
+            log('partial style - clear cache') //tofix
+            pipeline.clear_root_styles()
+            // reload main style sheet
+            sio.sockets.emit('reload style', 'css/style.css')
+          } else {
+            sio.sockets.emit('reload style', path.replace('.stl','.css'))
+          }
+        } else if (path.endsWith('cush.json')) {
+          log('reload json')
+          projectJson = eval('('+fs.readFileSync('cush.json','utf8')+')')
+          styleVars = projectJson.variables
+          templateVars = styleVars
+          sio.sockets.emit('reload')
+        } else {
+          log('unk watched resource changed: '+path)
+          sio.sockets.emit('reload')
+        }
         //}
       });
 

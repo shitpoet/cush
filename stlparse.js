@@ -52,7 +52,7 @@ export function StlParser() {
     csels: [], // compound sels
     //rawsel: '', // complex sel as raw string (+ ~ >)
     decls: {},
-    failbacks: {},
+    failbacks: {}, // failback[display] = [decl,decl]
     childs: [],
     atrule: null /* {
       name - font-face, media, charset etc
@@ -60,7 +60,6 @@ export function StlParser() {
     } */,
     cmnt: '', // cmnt before
     raw: '', // raw content `...`
-    //pipeline_entry: null
   })
 
   let new_simple_sel = () => seal({

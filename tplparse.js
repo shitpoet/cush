@@ -177,13 +177,18 @@ export function TplParser() {
 
   fun parse_attrs(s, attrs, aliases, prefix)
     let hash = {}
-    while s.at_id() {
+    while s.at_id() || s.s.startsWith('-') {
       let name = s.s
-      let has_prefix = name.startsWith(prefix)
-      if aliases[name]
+      let has_prefix = false
+      if name.startsWith('-')
+        name = 'data'+name
+        has_prefix = true
+      elif name.startsWith(prefix)
+        has_prefix = true
+      elif aliases[name]
         name = aliases[name].name
       let attr = attrs[name]
-      log(name, s.s2, s.s3)
+      //log(name, s.s2, s.s3)
       if s.s2=='=' || attr && attr.type=='boolean' || has_prefix
         s.shift() // skip attr name
         let value = null
