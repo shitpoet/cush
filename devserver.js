@@ -85,8 +85,8 @@ export let devServer = {
           sio.sockets.emit('reload')
         } else if (path.endsWith('.tpl')) {
           if (path.startsWith('_')) {
-            log('partial template - clear cache') //tofix
-            pipeline.clearCache()
+            log('partial template - clear tpl cache') //tofix
+            pipeline.clear_root_templates()
           }
           sio.sockets.emit('reload')
         } else if (path.endsWith('.stl')) {

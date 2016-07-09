@@ -596,6 +596,7 @@ export let declAliases = {
   tal: 'text-align: left',
   // u
   uc: 'text-transform: uppercase',
+  usn: 'user-select: none; cursor: default',
   vab: 'vertical-align: bottom',
   vat: 'vertical-align: top',
   vam: 'vertical-align: middle',

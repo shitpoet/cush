@@ -170,11 +170,19 @@ export let pipeline = {
     this._cache = {}
   },
 
+  clear_root_templates()
+    log('cache: clear toot templates')
+    let c = this._cache
+    for fn in c
+      if fn.endsWith('.tpl') && !fn.split('/').pop().startsWith('_')
+        delete this._cache[fn]
+  ,
+
   clear_root_styles()
     log('cache: clear toot styles')
     let c = this._cache
     for fn in c
-      if !fn.split('/').pop().startsWith('_')
+      if fn.endsWith('.stl') && !fn.split('/').pop().startsWith('_')
         delete this._cache[fn]
   ,
 

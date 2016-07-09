@@ -82,61 +82,85 @@ function process_full_csel(full_csel) {
   let m = full_csel.length
   for (let j = 0; j < m; j++) {
     let sel = full_csel[j]
-    if (sel.classes.length >= 1) {
-      let cname = sel.classes[0]
-      if (cname.startsWith('_')) {
-        if (sel.classes.length == 1) {
-          //log(`full csel ${i} simp sel ${j} cname ${cname}`)
-          let k = pcsel.length
-          if (k >= 1) {
-            if (pcsel[k-1].classes.length == 1) {
-              let parent_cname = pcsel[k-1].classes[0]
-              if (parent_cname.indexOf('--') > 0) {
-                parent_cname = parent_cname.split('--').shift()
-                sel.classes[0] = concat_cnames(parent_cname, cname)
-                pcsel.push(sel)
+    if (sel.classes.length > 0) { // sel have classes
+
+      for ci = 0; ci < sel.classes.len; ci++ {
+
+        let cname = sel.classes[ci]
+        if (cname.startsWith('_')) {
+          //if (sel.classes.length == 1) {
+            //log(`full csel ${i} simp sel ${j} cname ${cname}`)
+            let k = pcsel.length
+            if (k >= 1) {
+              /*if cname=='_register-variant-title'
+                log('pcsel:')
+                for s of pcsel
+                  if (s.tag) log('%'+s.tag.name)
+                  log(s.classes.join('.'))
+                  log('---')*/
+              // find parent class
+              let kk = k-1
+              while (
+                kk >= 0 && (
+                  pcsel[kk].classes.length == 0 ||
+                  pcsel[kk].classes[0].indexOf('__') > 0
+                )
+              ) kk--
+              if (kk >= 0) {
+                let parent_cname = pcsel[kk].classes[0]
+                if (parent_cname.indexOf('--') > 0) {
+                  parent_cname = parent_cname.split('--').shift()
+                  sel.classes[ci] = concat_cnames(parent_cname, cname)
+                  if ci == 0
+                    pcsel.push(sel)
+                } else {
+                  sel.classes[ci] = concat_cnames(parent_cname, cname)
+                  //sel.classes[0] = parent_cname + '_' + cname
+                  pcsel[kk] = sel
+                }
               } else {
-                sel.classes[0] = concat_cnames(parent_cname, cname)
-                //sel.classes[0] = parent_cname + '_' + cname
-                pcsel[k-1] = sel
+                throw new Error('cant concat classes (no parent with classes)')
+                //throw new Error('cant concat classes (too many parent classes)')
               }
             } else {
-              throw new Error('cant concat classes (too many parent classes)')
+              throw new Error('cant concat classes (no parent)')
             }
-          } else {
-            throw new Error('cant concat classes (no parent)')
-          }
-        } else {
-          throw new Error('cant concat classes (too many child classes)')
-        }
-      } else if (cname.startsWith('--')) {
-        if (sel.classes.length == 1) {
-          //log(`full csel ${i} simp sel ${j} cname ${cname}`)
-          let k = pcsel.length
-          if (k >= 1) {
-            if (pcsel[k-1].classes.length == 1) {
-              let parent_cname = pcsel[k-1].classes[0]
-              if (parent_cname.indexOf('--') > 0) {
-                parent_cname = parent_cname.split('--').shift()
-                sel.classes[0] = parent_cname+cname
-                pcsel.push(sel)
+          /*} else {
+            throw new Error('cant concat classes (too many child classes)')
+          }*/
+        } else if (cname.startsWith('--')) {
+          if (sel.classes.length == 1) {
+            //log(`full csel ${i} simp sel ${j} cname ${cname}`)
+            let k = pcsel.length
+            if (k >= 1) {
+              if (pcsel[k-1].classes.length > 0) {
+              //if (pcsel[k-1].classes.length == 1) {
+                let parent_cname = pcsel[k-1].classes[0]
+                if (parent_cname.indexOf('--') > 0) {
+                  parent_cname = parent_cname.split('--').shift()
+                  sel.classes[0] = parent_cname+cname
+                  pcsel.push(sel)
+                } else {
+                  sel.classes[0] = parent_cname+cname
+                  //sel.classes[0] = parent_cname + '_' + cname
+                  pcsel[k-1] = sel
+                }
               } else {
-                sel.classes[0] = parent_cname+cname
-                //sel.classes[0] = parent_cname + '_' + cname
-                pcsel[k-1] = sel
+                throw new Error('cant concat classes (parent has no classes)')
+                //throw new Error('cant concat classes (too many parent classes)')
               }
             } else {
-              throw new Error('cant concat classes (too many parent classes)')
+              throw new Error('cant concat classes (no parent)')
             }
           } else {
-            throw new Error('cant concat classes (no parent)')
+            throw new Error('cant concat classes (too many child classes)')
           }
         } else {
-          throw new Error('cant concat classes (too many child classes)')
+          if ci==0
+            pcsel.push(sel)
         }
-      } else { // no `_classname`
-        pcsel.push(sel)
       }
+
     } else if (sel.tag==null && sel.pseudos.length==1) { // no tags or classes but have pseudo
       let k = pcsel.length
       if (k >= 1) {
