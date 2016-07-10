@@ -24,6 +24,14 @@ export function SourceScope(__skip) {
     }
     return null
   }
+
+  fun checked_eval(_expr, _unwrapped_expr)
+    try
+      ret eval(_expr)
+    catch (e)
+      e.message += "\n" + 'On evaluating: "'+_unwrapped_expr+'"'
+      throw e
+
   this.evalExpr = function(_expr) {
     if (!_skip && _expr!='') {
       // variables are prefixed because
@@ -38,7 +46,8 @@ export function SourceScope(__skip) {
       //e += "}catch(e){}"
       //this.dump()
       //log(_s+'(  '+_expr+'  )'+_e)
-      var _val =  eval(_s+'(  '+_expr+'  )'+_e)
+      //var _val =  eval(_s+'(  '+_expr+'  )'+_e)
+      var _val =  checked_eval(_s+'(  '+_expr+'  )'+_e, _expr)
       //log('result: '+val)
       return _val
     } else {

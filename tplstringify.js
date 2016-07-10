@@ -9,7 +9,7 @@ function unwrap_cname(name) {
 // prefix=='' - no need for parent
 fun make_full_cname(prefix, name)
   let full_name
-  if (prefix) prefix += '_'
+  //if (prefix) prefix += '_'
   if name.indexOf('--') > 0
     let parts = name.split('--')
     let base = parts.shift()
@@ -37,9 +37,14 @@ fun get_full_cname(node, name)
         if !parent_name.startsWith('_')
           if parent_name.indexOf('--') > 0
             parent_name = parent_name.split('--')[0]
-          return make_full_cname(parent_name, name)
+          return make_full_cname(parent_name+'_', name)
       parent = parent.parent
     assert(false, 'no parent for '+name)
+  elif name.startsWith('-')
+    let parent = node.parent
+    let parent_name = get_full_cname(parent, parent.classes[0])
+    //let parent_name = get_cname(parent, parent.classes[0])
+    return make_full_cname(parent_name, name)
   else
     return make_full_cname('', name)
 
