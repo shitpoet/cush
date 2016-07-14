@@ -44,7 +44,9 @@ function clone_compound_sel(csel) {
   clones selectors while builidng to allow of mutation
   of any node without affect or another (several nodes
   may be childs of one so in flattened selectors selector
-  of parent node will be repeated for all children)  */
+  of parent node will be repeated for all children)
+
+  todo: avoid this cloning if its possible */
 function build_full_csels(rule) {
   let csels = rule.csels
   let full_csels = []
@@ -108,16 +110,20 @@ function process_full_csel(full_csel) {
               ) kk--
               if (kk >= 0) {
                 let parent_cname = pcsel[kk].classes[0]
-                if (parent_cname.indexOf('--') > 0) {
+                let parent_pseudos = pcsel[kk].pseudos
+                if parent_cname.indexOf('--') > 0
                   parent_cname = parent_cname.split('--').shift()
                   sel.classes[ci] = concat_cnames(parent_cname, cname)
                   if ci == 0
                     pcsel.push(sel)
-                } else {
+                elif parent_pseudos.len > 0
+                  sel.classes[ci] = concat_cnames(parent_cname, cname)
+                  if ci == 0
+                    pcsel.push(sel)
+                else
                   sel.classes[ci] = concat_cnames(parent_cname, cname)
                   //sel.classes[0] = parent_cname + '_' + cname
                   pcsel[kk] = sel
-                }
               } else {
                 throw new Error('cant concat classes (no parent with classes)')
                 //throw new Error('cant concat classes (too many parent classes)')
@@ -161,7 +167,7 @@ function process_full_csel(full_csel) {
         }
       }
 
-    } else if (sel.tag==null && sel.pseudos.length==1) { // no tags or classes but have pseudo
+    } else if (sel.tag==null && sel.pseudos.length==1) { // no tags but have pseudo
       let k = pcsel.length
       if (k >= 1) {
         pcsel[k-1].pseudos.push(sel.pseudos[0])

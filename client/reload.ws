@@ -12,8 +12,8 @@ function setScrollTop(y) {
   window.scrollTo(0,y)
 }
 
-function full_reload() {
-  document.location.reload() }
+fun full_reload()
+  document.location.reload()
 
 function executeScriptNode(node) {
   var parent = node.parentElement, d = document.createElement('script')
@@ -27,27 +27,27 @@ function executeScriptNode(node) {
 function executeScripts(wrap) {
   var s = wrap.getElementsByTagName('script')
   for (var i = 0; i < s.length ; i++) {
-    if(s[i].src.indexOf('RELOAD.js') < 0) {
-      executeScriptNode(s[i]) }
+    if s[i].src.indexOf('RELOAD.js') < 0
+      executeScriptNode(s[i])
   }
 }
 
-function reload_html(name) {
+fun reload_html(name) {
   var href = document.location.href
   var page = href.split(/[\/#\?]/).pop().split('.').shift()
   if (page=='') page = 'index'
   console.log({page, name})
-  if(name==page) { // reload html only w/o resources
-    fetch(page).then(function(r){
-      r.text().then(function(text){
+  if name==page // reload html only w/o resources
+    fetch(page).then(fun(r){
+      r.text().then(fun(text){
         //console.log(text)
         document.querySelector('html').innerHTML = text
         executeScripts(document)
         //todo: handle the case script links were added/removed
       })
-    }) }
-  else { // full reload
-    full_reload() }
+    })
+  else // full reload
+    full_reload()
 }
 
 function reloadStyle(path) {
@@ -126,8 +126,8 @@ socket.on('error', function(data){
   var message = data.error
   var body = document.body
   if (message!==null) {
-    if (serverErrors[source]) {
-      serverErrors[source].el.remove() }
+    if (serverErrors[source])
+      serverErrors[source].el.remove()
     var errorEl = document.createElement('div')
     errorEl.style.position = 'fixed'
     errorEl.style.zIndex = '9999999'

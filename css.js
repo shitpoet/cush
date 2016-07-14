@@ -268,6 +268,16 @@ export let knownProps = {
   },
   'flex-shrink': {
   },
+  'flex-wrap': {
+    args: {
+      type: 'enum',
+      values: {
+        nowrap: { alias: 'n' },
+        wrap: { alias: 'w' },
+        'wrap-reverse': { alias: 'wr' }
+      }
+    }
+  },
   'float': {
     args: {
       type: 'enum',
@@ -570,6 +580,7 @@ export let declAliases = {
   fr: 'float: right',
   fl: 'float: left',
   flex: 'display: flex',
+  fjac: 'display: flex; justify-content: center; align-items: center',
   // g h
   ib: 'display: inline-block',
   ibb: 'display: inline-block; vertical-align: bottom',
@@ -589,7 +600,7 @@ export let declAliases = {
   // q
   rel: 'position: relative',
   row: 'display: table-row',
-  // s
+  sb: 'justify-content: space-between',
   table: 'display: table',
   tac: 'text-align: center',
   tar: 'text-align: right',

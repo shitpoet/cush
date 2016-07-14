@@ -142,13 +142,13 @@ export function StlParser() {
     s.skip(':')
     let str = ''
     if (s.trySkip(':')) str = ':' // 2nd `:`
-    str += s.id()
+    str += s.id$()
     if (extPseudos[str]) {
       str = extPseudos[str](rule, str)
     } else {
       while (
         s.s=='(' || s.s==')' || is_id(s.t) || is_int(s.t) ||
-        s.s=='+' || s.s=='-'
+        s.s=='+' || s.s=='-' || s.s=='$'
       ) {
         str += s.shift().s
       }
@@ -159,20 +159,29 @@ export function StlParser() {
 
   function parse_simple_sel(rule, s) {
     let sel = new_simple_sel()
-    if s.s==='*' || is_id(s.t) || s.s=='+' || s.s=='~'
+    if s.s=='%'
+      s.shift()
       let id = s.shift().s
-      if (knownTags[id]) {
+      if knownTags[id]
         sel.tag = knownTags[id]
-      } else {
-        sel.classes.push(id)
-      }
-    while (s.s=='.' || s.s=='#') {
+      else
+        throw s.error('unk tag '+id+' while parinsg selector')
+    else
+      if s.s==='*' || is_id(s.t) || s.s=='+' || s.s=='~'
+        let id = s.shift().s
+        let knownTag = knownTags[id]
+        if knownTag && !knownTag.pessimisted
+          sel.tag = knownTag
+        else
+          sel.classes.push(id)
+    while (s.s=='.' || s.s=='#' || s.s=='$') {
       if (s.trySkip('.')) {
-        sel.classes.push( s.id() )
+        sel.classes.push( s.id$() )
       } else if (s.trySkip('#')) {
         if (sel.id) s.warn('several ids')
-        sel.id = s.id()
-      }
+        sel.id = s.id$()
+      } else
+        sel.classes.push( s.id$() )
     }
     while (s.s==':') {
       sel.pseudos.push( scan_pseudo(rule, s) )
@@ -444,7 +453,7 @@ export function StlParser() {
     rule.decls = parse_decls(rule, s)
     rule.childs = parse_nested_rules(rule, s)
     s.skip('}')
-    if (parent.parent==null) {
+    if (parent.parent==null) { //tofix: move this out of parser?
       if (rule.csels.length == 1) {
         let csel = rule.csels[0]
         if (csel.length == 1) {

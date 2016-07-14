@@ -63,6 +63,7 @@ export let devServer = {
 
       chokidar.watch([
         __dirname+'/*.js', //buggy: causes generation of unlinkDir and bugs with on 'all' events listener
+        __dirname+'/client/*.ws', //buggy: causes generation of unlinkDir and bugs with on 'all' events listener
         '*.tpl','*.stl','css/*.stl',
         '*.js','*.json','js/*.js',
         'js/*.ws'
@@ -75,20 +76,26 @@ export let devServer = {
           pipeline.clearCache()
           sio.sockets.emit('reload')
         elif path.endsWith('.ws')
-          log('reload ws')
+          log('reload ws '+path)
+          // expand site scripts (for deploying)
+          // keep cush scripts compact (for debbuging)
+          let expand = path.indexOf(__dirname) != 0
           let js_path = path.replace(/\.ws$/, '.js')
-          fs.writeFileSync(js_path, read_and_curlify(path, true))
+          fs.writeFileSync(js_path, read_and_curlify(path, expand))
           sio.sockets.emit('reload')
         else if (path.startsWith(__dirname)) { // cush itself
           //log('restart')
           //process.exit(5)
           sio.sockets.emit('reload')
         } else if (path.endsWith('.tpl')) {
-          if (path.startsWith('_')) {
-            log('partial template - clear tpl cache') //tofix
+          if path.startsWith('_')
+            log('partial template - clear root tpl cache') //tofix: add dependencies or make something to do clearing of the cache smarter
             pipeline.clear_root_templates()
-          }
-          sio.sockets.emit('reload')
+            sio.sockets.emit('reload')
+          else
+            sio.sockets.emit('reload html',
+              path.split('/').pop().split('.')[0]
+            )
         } else if (path.endsWith('.stl')) {
           if (path.split('/').pop().startsWith('_')) {
             log('partial style - clear cache') //tofix

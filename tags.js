@@ -52,7 +52,8 @@ export let knownTags = {
       name: { alias: 'n' },
       type: { alias: 't' },
     },
-    otherAttrs: 'autofocus? value disabled?'
+    otherAttrs: 'autofocus? value disabled?',
+    //pessimisted: true,
   },
   canvas: {
     attrs: 'width height'
@@ -129,7 +130,8 @@ export let knownTags = {
   },
   link: {
     selfClosing: true,
-    attrs: 'href, rel, type, media'
+    attrs: 'href, rel, type, media',
+    pessimisted: true
   },
   main: {},
   mark: {

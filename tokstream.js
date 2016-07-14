@@ -75,6 +75,13 @@ export let TokStream = function(toks) {
     }
   }
 
+  // shift id that can contain sigils ($)
+  this.id$ = fun()
+    let s = ''
+    while is_id(self.t) || self.s=='$'
+      s += shift().s
+    ret s
+
   this.at_line_start = function() {
     return is_sol(this.t)
   }

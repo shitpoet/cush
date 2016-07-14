@@ -103,7 +103,91 @@ fun walk_styles(node, transform, vars) {
   }
 }
 
+fun compile_string_array(a)
+  ret '[`'+a.join('`,`')+'`]'
+
+/* ssel is described by {
+    tag: reference to tag descriptor
+    id: string
+    classes: array of strings
+    pseudos: array of strings (wo ':')
+  } */
+fun compile_sel(sel)
+  let code = '{'
+  if sel.tag
+    code += 'tag: `'+sel.tag.name+'`, '
+  if sel.id
+    code += 'id: `'+sel.id+'`, '
+  if sel.classes.len > 0
+    let str = compile_string_array(sel.classes)
+    code += 'classes: '+str+', '
+  if sel.pseudos.len > 0
+    let str = compile_string_array(sel.pseudos)
+    code += 'pseudos: '+str+', '
+  code += '}'
+  ret code
+
+fun compile_csel(csel)
+  let code = []
+  for sel of csel
+    code.push( compile_sel(sel) )
+  ret '['+code.join(',')+']'
+
+fun compile_csels(csels)
+  let code = []
+  for csel of csels
+    code.push( compile_csel(csel) )
+  ret '['+code.join(',')+']'
+  ret code
+
+fun compile_decl(decl)
+  let code = ''
+  code += 'name: `'+decl.name+'`, '
+  code += 'value: `'+decl.value+'`'
+  ret '{'+code+'}'
+
+fun compile_decls(decls)
+  let code = []
+  for prop_name in decls
+    let decl = decls[prop_name]
+    code.push( compile_decl(decl)  )
+  ret code
+/* node has csels, decls, failbacks and childs
+  decls - declarations hash:
+      [propName] => {
+        name: property name string
+        value: property value strin
+        important: boolean
+      }   */
+fun compile_rule(ast)
+  let code = ''
+  if ast.csels.len > 0
+    code += '{csels: '
+    code += compile_csels(ast.csels)
+    code += ","
+    code += 'decls: '
+    code += compile_decls(ast.decls)
+    code += ","
+  if ast.childs.len > 0
+    let subrules = []
+    for child of ast.childs
+      subrules.push( compile_rule(child) )
+    code += 'childs: '
+    code += '['+subrules.join(',')+']'
+    code += ","
+  code += "},"
+  ret code
+
+fun compile_style(ast)
+  ret compile_rule(ast)
+
 export function compileStyle(ast) {
+  //l(util.inspect( compile_style(ast).toString() ))
+  /*log(compile_style(ast, {
+    test: 'hi'
+  })())*/
+  /*return fun()
+    return ''  */
   return function(vars) {
     log('stringify stl ---------------------')
     var out = new OutStream()
@@ -118,4 +202,5 @@ export function compileStyle(ast) {
     stringifyStyle(ast, out, vars, -1)
     return out.getText()
   }
+
 }
