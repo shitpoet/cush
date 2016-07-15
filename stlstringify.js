@@ -1,4 +1,9 @@
 
+
+let gather_class_stats = false
+export let class_stats = {}
+
+
 function sel_to_str(sel) {
   let str = ''
   if (sel.tag) str = sel.tag.name
@@ -125,8 +130,15 @@ function process_full_csel(full_csel) {
                   //sel.classes[0] = parent_cname + '_' + cname
                   pcsel[kk] = sel
               } else {
-                throw new Error('cant concat classes (no parent with classes)')
-                //throw new Error('cant concat classes (too many parent classes)')
+                if k==1 && pcsel[0].classes.len > 0 && pcsel[0].classes[0].indexOf('__')>0 && pcsel[0].classes[0].indexOf('--')<0
+                  let parent_cname = pcsel[0].classes[0].split('__')[0]
+                  sel.classes[ci] = concat_cnames(parent_cname, cname)
+                  pcsel.push(sel)
+                  log(pcsel)
+                else
+                  //pcsel.push(sel)
+                  throw new Error('cant concat classes (no parent with classes)')
+                  //throw new Error('cant concat classes (too many parent classes)')
               }
             } else {
               throw new Error('cant concat classes (no parent)')
@@ -235,6 +247,18 @@ function sels_to_strs(rule, csels) {
   let strs = []
   for (let csel of full_csels) {
     let str = csel.map(sel_to_str).join(' ')
+
+    if gather_class_stats
+      for sel of csel
+        for cname of sel.classes
+          let parts = cname.split(/[-_]/)
+          for part of parts
+            if part
+              if part in class_stats
+                class_stats[part]++
+              else
+                class_stats[part] = 0
+
     strs.push( str )
   }
   return strs
@@ -326,4 +350,23 @@ fun stringifyRule(prefix, rule, out, scope, depth) {
 
 export function stringifyStyle(ast, out, scope, depth) {
   stringifyRule('', ast, out, scope, depth)
+}
+
+export fun log_class_stats() {
+  let stats = class_stats
+  let arr = []
+  for key in stats
+    arr.push( {key, value: stats[key]} )
+
+  function compare(a,b) {
+    if (a.value < b.value)
+      return 1;
+    if (a.value > b.value)
+      return -1;
+    return 0;
+  }
+
+  arr.sort(compare)
+  log(arr)
+
 }

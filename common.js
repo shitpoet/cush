@@ -1,3 +1,4 @@
+export let fs = require('fs')
 export let util = require('util')
 
 // make include function accessible to included modules
@@ -5,6 +6,12 @@ export let util = require('util')
 // it works because all vars from included modules are
 // accessible package-wise (?)
 var include = require('./include')
+
+/** string utils **/
+
+String.prototype.split_lines = fun()
+  ret this.split('\n')
+
 
 export let assert = console.assert.bind(console)
 //export let log = console.log.bind(console)
@@ -16,15 +23,6 @@ export let assert = console.assert.bind(console)
 }
 
 global.log_call = log_call*/
-
-export function getFile(fn) {
-  return fs.readFileSync(fn,'utf8')
-}
-export let get_file = getFile
-
-export function exists(fn) {
-  return fs.existsSync(fn)
-}
 
 /*function putFile(fn, s) {
   fs.writeFileSync(fn, s)
@@ -61,5 +59,18 @@ Object.defineProperty(Array.prototype, 'len', {
 
 /*export fun is_undefined(x)
   return typeof x === 'undefined'*/
+
+/** fs **/
+
+export function getFile(fn) {
+  return fs.readFileSync(fn,'utf8')
+}
+export let get_file = getFile
+
+export function exists(fn) {
+  return fs.existsSync(fn)
+}
+
+/** reexport **/
 
 include('log')

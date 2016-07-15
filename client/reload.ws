@@ -1,6 +1,9 @@
 "use strict"
 
-var socket = io('http://localhost:SIO_PORT')
+var hostname = document.location.toString().split('/')[2].split(':')[0]
+console.log('hostname '+hostname)
+var socket = io('http://'+hostname+':SIO_PORT')
+//var socket = io('http://localhost:SIO_PORT')
 
 var cssVer = 0
 

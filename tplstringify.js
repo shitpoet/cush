@@ -149,7 +149,8 @@ export function stringifyTemplate(ast, out, depth) {
     if (ast.wsBefore & tt.sp) out.sp()
 
     // auto add surrounding comments for section tags
-    if (ast.tag && ast.tag.name=='section' && ast.classes.length>0 && !ast.cmntBefore) {
+    let autocmnt = ' section header footer nav '
+    if (ast.tag && autocmnt.indexOf(' '+ast.tag.name+' ')>=0 && ast.classes.length>0 && !ast.cmntBefore) {
       var blockCmntName = ast.classes[0]
       //log('ADD SEC CMNT')
       if (blockCmntName.indexOf('-wrap')>=0) {
@@ -158,8 +159,8 @@ export function stringifyTemplate(ast, out, depth) {
         blockCmntName = blockCmntName.slice(0, blockCmntName.length-1)
         blockCmntName = blockCmntName.join('-')
       }
-      ast.cmntBefore = ' BEGIN '+blockCmntName+' '
-      ast.cmntAfter  = ' END '+blockCmntName+' '
+      ast.cmntBefore = ' begin '+blockCmntName+' '
+      ast.cmntAfter  = ' end '+blockCmntName+' '
     }
 
     if (ast.cmntBefore) {

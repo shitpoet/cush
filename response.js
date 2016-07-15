@@ -1,5 +1,7 @@
 //todo: decouple request processing from rendering
 
+const fs = require('fs')
+
 var staticServer = new(require('node-static').Server)();
 //require('raptor-polyfill')
 let include = require('./include')
@@ -28,6 +30,15 @@ var lastCsss=[], lastHtmls=[]
 var lastPageVars = {}
 let tplParseError = null // was wo let......
 let stlParseError = null
+
+fun make_reload_code(opts) {
+  let code = ''
+  code += getFile(__dirname+'/client/socket.io.js')
+  code += getFile(__dirname+'/client/reload.js').replace('SIO_PORT', opts.port+1)
+  return code
+}
+
+let reload_code
 
 /*fun renderTemplate(fn, str) {
   console.time('renderTemplate')
@@ -94,20 +105,13 @@ fun renderStyle(fn) {
 }
 
 export function respond(opts) {
+  reload_code = make_reload_code(opts)
   return function (req, res) {
     var renderOpts = {
       skipPhpTags: projectInfo.variables.phpMode,
       recursiveRender: !projectInfo.variables.phpMode
     }
     //log('render opts',renderOpts)
-
-
-
-
-
-
-
-
 
     //console.log('HTTP '+req.url)
     var url = req.url
@@ -202,13 +206,13 @@ export function respond(opts) {
       //log(opts);
       if (opts.liveReload) {
 
-        /*tpl += "<script>\n"
-        tpl += getFile(__dirname+'/lib/socket.io.js')
-        tpl += getFile(__dirname+'/reload.js')
-        tpl += "</script>"*/
-        //if (projectInfo.variables.phpMode) {
         if (tpl.indexOf('</html>')>=0) { // attach autoreload script only once
-          tpl += "<script src='http://localhost:8888/RELOAD.js'></script>"
+          tpl += "<script>\n"
+          tpl += reload_code
+          //tpl += getFile(__dirname+'/lib/socket.io.js')
+          //tpl += getFile(__dirname+'/reload.js')
+          tpl += "</script>"
+          //tpl += "<script src='http://localhost:8888/RELOAD.js'></script>"
         }
         //}
       }
@@ -256,12 +260,12 @@ export function respond(opts) {
       res.end(stl)
       log('write',cssPath)
       fs.writeFile(cssPath, stl)
-    } else if (fn=='RELOAD.js') {
+    /*} else if (fn=='RELOAD.js') {
       res.writeHead(200, {"Content-Type": "text/javascript"})
       var code = ''
       code += getFile(__dirname+'/client/socket.io.js')
       code += getFile(__dirname+'/client/reload.js').replace('SIO_PORT', opts.port+1)
-      res.end(code)
+      res.end(code)*/
     /*} else if (fn=='favicon.ico' && !fs.existsSync(fn)) {
       * if favicon requests and there no file send development icon
          to avoid 404 error message in console (because of bad browser extensions) *

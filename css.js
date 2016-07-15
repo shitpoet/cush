@@ -478,9 +478,11 @@ export let knownProps = {
     args: {
       type: 'enum',
       values: {
-        ellipsis: {}
+        clip: {},
+        ellipsis: { alias: 'ell' }
       }
-    }
+    },
+    alias: 'tover'
   },
   'text-rendering': {},
   'text-shadow': {
@@ -580,6 +582,10 @@ export let declAliases = {
   fr: 'float: right',
   fl: 'float: left',
   flex: 'display: flex',
+  fsb: 'display: flex; justify-content: space-between',
+  fsbt: 'display: flex; justify-content: space-between; align-items: flex-start',
+  fsbc: 'display: flex; justify-content: space-between; align-items: center',
+  fsbb: 'display: flex; justify-content: space-between; align-items: flex-end',
   fjac: 'display: flex; justify-content: center; align-items: center',
   // g h
   ib: 'display: inline-block',
