@@ -82,6 +82,7 @@ export let devServer = {
           let expand = path.indexOf(__dirname) != 0
           let js_path = path.replace(/\.ws$/, '.js')
           fs.writeFileSync(js_path, read_and_curlify(path, expand))
+          rebuild_client_code()
           sio.sockets.emit('reload')
         else if (path.startsWith(__dirname)) { // cush itself
           //log('restart')

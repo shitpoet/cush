@@ -134,7 +134,6 @@ function process_full_csel(full_csel) {
                   let parent_cname = pcsel[0].classes[0].split('__')[0]
                   sel.classes[ci] = concat_cnames(parent_cname, cname)
                   pcsel.push(sel)
-                  log(pcsel)
                 else
                   //pcsel.push(sel)
                   throw new Error('cant concat classes (no parent with classes)')

@@ -31,14 +31,20 @@ var lastPageVars = {}
 let tplParseError = null // was wo let......
 let stlParseError = null
 
-fun make_reload_code(opts) {
+let last_mcc_opts = {}
+
+fun make_client_code(opts)
   let code = ''
   code += getFile(__dirname+'/client/socket.io.js')
   code += getFile(__dirname+'/client/reload.js').replace('SIO_PORT', opts.port+1)
+  code += getFile(__dirname+'/client/client.js')
+  last_mcc_opts = opts
   return code
-}
 
-let reload_code
+let client_code = ''
+
+export fun rebuild_client_code()
+  client_code = make_client_code(last_mcc_opts)
 
 /*fun renderTemplate(fn, str) {
   console.time('renderTemplate')
@@ -105,7 +111,7 @@ fun renderStyle(fn) {
 }
 
 export function respond(opts) {
-  reload_code = make_reload_code(opts)
+  client_code = make_client_code(opts)
   return function (req, res) {
     var renderOpts = {
       skipPhpTags: projectInfo.variables.phpMode,
@@ -208,7 +214,7 @@ export function respond(opts) {
 
         if (tpl.indexOf('</html>')>=0) { // attach autoreload script only once
           tpl += "<script>\n"
-          tpl += reload_code
+          tpl += client_code
           //tpl += getFile(__dirname+'/lib/socket.io.js')
           //tpl += getFile(__dirname+'/reload.js')
           tpl += "</script>"
