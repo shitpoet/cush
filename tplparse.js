@@ -18,6 +18,7 @@
 
 
 include('tags')
+include('parse')
 
 function new_node(parent) {
   //if (parent && parent.tag) log('new node with parent '+parent.tag.name)
@@ -117,6 +118,7 @@ export function TplParser() {
           attrs[key] = false
 
       let scope = new SourceScope()
+      scope.push(projectInfo.variables)
       scope.push(attrs)
       //log('include with scope');scope.dump()
       _expand_ast(ast, scope)
@@ -220,16 +222,22 @@ export function TplParser() {
       node.classes.push( attrValue )
     else     */
 
+  fun add_class(classes, cname)
+    classes.push( filter_parsed_cname(cname)  )
+
   function parse_tag(parent, s) {
     let node = new_node(parent, s)
     node.startTok = s.t
-    var tagName
+    var tname
     if (is_id(s.t)) {
-      tagName = s.id()
-      if (!knownTags[tagName]) {
-        node.classes.push( tagName )
-        tagName = 'div'
-      }
+      tname = s.id()
+      let tname_expanded = filter_parsed_tname(tname)
+      if known_tags[tname_expanded]
+        tname = tname_expanded
+      elif !known_tags[tname]
+        //node.classes.push( tagName )
+        add_parsed_class(node.classes, tname)
+        tname = 'div'
     }
     while (s.s=='.' || s.s=='#') {
       //if (s.trySkip('.')) {
@@ -238,25 +246,25 @@ export function TplParser() {
       if (s.s=='.')
         while (s.trySkip('.'));
         //if (!is_id(s.t)) throw s.error('bad tag class')
-        node.classes.push( s.id() )
-        if (!tagName) tagName = 'div'
+        add_class(node.classes, s.id())
+        if (!tname) tname = 'div'
       //elif (s.trySkip('#'))
       else
         while (s.trySkip('#'));
         //if (s.s=='.' || s.s=='#') continue
         //if (!is_id(s.t2)) throw s.error('bad tag id')
         node.id = s.id()
-        if (!tagName) tagName = 'div'
+        if (!tname) tname = 'div'
     }
-    if (!tagName) throw s.error('bad tag declaration')
+    if (!tname) throw s.error('bad tag declaration')
 
     if (s.trySkip('~')) {
       //log('wrapper node: ', node)
       node.flags.wrapper = true
     }
 
-    //log('tag',tagName)
-    node.tag = knownTags[tagName]
+    //log('tag',tname)
+    node.tag = known_tags[tname]
     if (s.s!=':' && s.s2!=' ')  {
       s.skip_sp()
       parse_tag_attrs(node, s)

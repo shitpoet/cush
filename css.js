@@ -385,7 +385,11 @@ export let knownProps = {
   },
   order: {},
   outline: {
-    args: ['len', 'len', 'len', 'len'],
+    args: ['len', 'border-style', 'color'],
+    alias: 'outl'
+  },
+  'outline-offset': {
+    alias: 'outl-offset'
   },
   overflow: {
     args: {
@@ -563,6 +567,7 @@ export let propAliases = {}
 
 export let declAliases = {
   abs: 'position: absolute',
+  absfill: 'position: absolute; left: 0px; top; 0px; right: 0px; bottom: 0px',
   white: 'background: white',
   bold: 'font-weight: bold',
   block: 'display: block',

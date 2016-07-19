@@ -36,6 +36,8 @@
 include('tags')
 include('css')
 
+include('parse')
+
 include('ext/pseudos')
 
 // top-level rules with simple selectors
@@ -87,13 +89,17 @@ export function StlParser() {
     //throw 'parse_atrule not impl'
     s.shift() // @
     let name, params
-    if is_int(s.t) || 'xs sm md lg '.indexOf(s.s)>=0 {
+    //if is_int(s.t) || 'xs sm md lg '.indexOf(s.s)>=0 {
+    if is_int(s.t) {
       let bp = s.shift().s
-      if parseInt(bp)!=bp {
+      bp = parseInt(bp)
+      if bp < 10
+        bp = projectInfo.breakpoints[bp-1]
+      /*if parseInt(bp)!=bp {
         //log(bp)
         bp = {xs:'320',sm:'768',md:'1024',lg:'1320'}[bp]
         //log(bp)
-      }
+      }*/
       name = 'media'
       params = 'only screen and '
       if (s.s=='+') {
@@ -173,15 +179,18 @@ export function StlParser() {
         if knownTag && !knownTag.pessimisted
           sel.tag = knownTag
         else
-          sel.classes.push(id)
+          //sel.classes.push(id)
+          add_parsed_class(sel.classes, id)
     while (s.s=='.' || s.s=='#' || s.s=='$') {
       if (s.trySkip('.')) {
-        sel.classes.push( s.id$() )
+        add_parsed_class( sel.classes, s.id$() )
+        //sel.classes.push( s.id$() )
       } else if (s.trySkip('#')) {
         if (sel.id) s.warn('several ids')
         sel.id = s.id$()
       } else
-        sel.classes.push( s.id$() )
+        //sel.classes.push( s.id$() )
+        add_parsed_class( sel.classes, s.id$() )
     }
     while (s.s==':') {
       sel.pseudos.push( scan_pseudo(rule, s) )

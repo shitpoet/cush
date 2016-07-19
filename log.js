@@ -4,7 +4,7 @@ let logging = {
   'devserver': false,
   'pipeline': false,
   'log': true,
-  'response': false
+  'response': true
 }
 
 export function get_stack() {

@@ -204,9 +204,11 @@ export let knownTags = {
   span: {},
   textarea: {
     attrs: {
-      placeholder: { alias: 'ph' }
+      name: { alias: 'n' },
+      placeholder: { alias: 'ph' },
+      required: { type: 'boolean', alias: 'req' },
     },
-    otherAttrs: 'name, rows, cols, autofocus, disabled? required?'
+    otherAttrs: 'rows, cols, autofocus, disabled?'
   },
   table: {
   },
@@ -232,6 +234,7 @@ export let knownTags = {
   }
   // w x y z
 }
+export let known_tags = knownTags
 
 !function(tags) {
 

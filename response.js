@@ -35,7 +35,8 @@ let last_mcc_opts = {}
 
 fun make_client_code(opts)
   let code = ''
-  code += getFile(__dirname+'/client/socket.io.js')
+  //code += getFile(__dirname+'/client/socket.io.js')
+  code += getFile(__dirname+'/client/socketio.min.js')
   code += getFile(__dirname+'/client/reload.js').replace('SIO_PORT', opts.port+1)
   code += getFile(__dirname+'/client/client.js')
   last_mcc_opts = opts
@@ -279,7 +280,11 @@ export function respond(opts) {
       staticServer.serve(req, res);i*/
     } else {
       //log('static file '+req.url)
-      staticServer.serve(req, res);
+      //staticServer.serve(req, res);
+      req.addListener('end', function() {
+        staticServer.serve(req, res)
+      }).resume();
+
     }
   }
 }
