@@ -1,10 +1,10 @@
 "use strict"
 
-let logging = false
+let logging = true
 function log(...args) {
   if (logging) console.log(...args)
 }
-let timing = false
+let timing = true
 function time(...args) {
   if (timing) console.time(...args)
 }
@@ -17,7 +17,7 @@ let hot = true
 
 let Module = require('module')
 let path = require('path')
-let fs = require('fs')
+//let fs = require('fs')
 let vm = require('vm')
 
 let chokidar
@@ -627,6 +627,7 @@ function rewrite(moduleName, code, opts) {
 }
 
 function read_and_rewrite(fn, moduleName, opts) {
+  log('read_and_curlify '+fn)
   let code = read_and_curlify(fn)
   let toks = tokenize(moduleName, code)
   opts = opts ? opts : {}
@@ -758,14 +759,21 @@ let include = global.include = module.exports = function(names, opts) {
       let code = read_and_rewrite(fn, name, opts)
       timeEnd('rewrite c')
 
-      //log('rewrited');log(code.trim())
-      var script = new vm.Script(code, {filename: fn})
-      //global[`__script_${name}`] = script
-      // simple (introduces top level variables to global scope
-      //!function(){
+      try {
+        //log('rewrited');log(code.trim())
+        var script = new vm.Script(code, {filename: fn})
+
+        //global[`__script_${name}`] = script
+        // simple (introduces top level variables to global scope
+        //!function(){
         script.runInThisContext()
-      //}.bind(global)()
-      //vm.runInThisContext(code, fn)
+        //}.bind(global)()
+        //vm.runInThisContext(code, fn)
+      } catch (e) {
+        err('compilation')
+        err(e)
+        return;
+      }
 
       if (opts.reload) {
         //monkeyPatch(name, code)

@@ -13,6 +13,7 @@ include('pipeline')
 include('prefix')
 
 let sio = null
+let sio_port = projectInfo.port*10
 
 var lastServerErrors = {
 }
@@ -32,32 +33,34 @@ export let devServer = {
     if opts.autoprefix
       pipeline.add_post('stl', autoprefix_css)
 
-    sio = require('socket.io')(opts.port+1)
+    if opts.live_reload
+      sio = require('socket.io')(sio_port)
 
     opts.onSetLastError = setLastServerError
 
     server.listen(opts)
 
-    sio.on('connection', function (socket) {
-      log('io connection')
-      // when the client emits 'new message', this listens and executes
-      socket.on('new message', function (data) {
-        // we tell the client to execute 'new message'
-        log('new msg')
-        socket.broadcast.emit('new message', {
-          //username: socket.username,
-          message: data
+    if opts.live_reload
+      sio.on('connection', function (socket) {
+        log('io connection')
+        // when the client emits 'new message', this listens and executes
+        socket.on('new message', function (data) {
+          // we tell the client to execute 'new message'
+          log('new msg')
+          socket.broadcast.emit('new message', {
+            //username: socket.username,
+            message: data
+          });
         });
+        // resend erros on new connection
+        for (var errorSource in lastServerErrors) {
+          var e = lastServerErrors[errorSource]
+          if e
+            log('send error for '+errorSource)
+            send_error(errorSource, e)
+          //lastServerErrors[errorSource] = null
+        }
       });
-      // resend erros on new connection
-      for (var errorSource in lastServerErrors) {
-        var e = lastServerErrors[errorSource]
-        if e
-          log('send error for '+errorSource)
-          send_error(errorSource, e)
-        //lastServerErrors[errorSource] = null
-      }
-    });
 
     if (!opts.phpMode) {
 
@@ -79,7 +82,7 @@ export let devServer = {
           log('reload ws '+path)
           // expand site scripts (for deploying)
           // keep cush scripts compact (for debbuging)
-          let expand = path.indexOf(__dirname) != 0
+          let expand = !opts.live_reload && path.indexOf(__dirname) != 0
           let js_path = path.replace(/\.ws$/, '.js')
           fs.writeFileSync(js_path, read_and_curlify(path, expand))
           rebuild_client_code()

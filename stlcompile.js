@@ -182,6 +182,10 @@ fun compile_style(ast)
   ret compile_rule(ast)
 
 export function compileStyle(ast) {
+
+  if projectInfo.stl_compiler
+    ret compile_style(ast)
+
   //l(util.inspect( compile_style(ast).toString() ))
   /*log(compile_style(ast, {
     test: 'hi'

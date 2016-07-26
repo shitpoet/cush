@@ -1,15 +1,18 @@
 fun filter_parsed_name(name, dic)
-  let parts = name.split(/(?=[-_])/)
-  for i = 0; i < parts.len; i++
-    let part = parts[i]
-    let bare = part
-    if part.startsWith('-') { bare = part.slice(1) }
-    elif part.startsWith('_') { bare = part.slice(1) }
-    //l(bare)
-    if bare in dic
-      parts[i] = part.replace(bare, dic[bare])
-      log('expand '+part+' to '+parts[i])
-  ret parts.join('')
+  if dic
+    let parts = name.split(/(?=[-_])/)
+    for i = 0; i < parts.len; i++
+      let part = parts[i]
+      let bare = part
+      if part.startsWith('-') { bare = part.slice(1) }
+      elif part.startsWith('_') { bare = part.slice(1) }
+      //l(bare)
+      if bare in dic
+        parts[i] = part.replace(bare, dic[bare])
+        log('expand '+part+' to '+parts[i])
+    ret parts.join('')
+  else
+    ret name
 
 export fun filter_parsed_tname(name)
   ret filter_parsed_name(name, projectInfo.tag_aliases)

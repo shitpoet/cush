@@ -4,6 +4,8 @@ var http = require('http')
 let include = require('./include')
 include('response')
 
+include(process.cwd()+'/cush')
+
 export let server = {
   listen: function(opts){
     var server = http.createServer(respond(opts))

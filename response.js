@@ -20,11 +20,6 @@ include('stlcompile')
 
 timeEnd('load bunch of modules')
 
-//var projectJson = eval('('+fs.readFileSync('cush.json','utf8')+')')
-//var projectInfo = require(process.cwd()+'/cush.js')
-include(process.cwd()+'/cush')
-//log('projectInfo',projectInfo)
-
 var lastTplPath='', lastStlPath=''
 var lastCsss=[], lastHtmls=[]
 var lastPageVars = {}
@@ -33,11 +28,11 @@ let stlParseError = null
 
 let last_mcc_opts = {}
 
-fun make_client_code(opts)
+export fun make_client_code(opts)
   let code = ''
   //code += getFile(__dirname+'/client/socket.io.js')
   code += getFile(__dirname+'/client/socketio.min.js')
-  code += getFile(__dirname+'/client/reload.js').replace('SIO_PORT', opts.port+1)
+  code += getFile(__dirname+'/client/reload.js').replace('SIO_PORT', opts.port*10)
   code += getFile(__dirname+'/client/client.js')
   last_mcc_opts = opts
   return code
@@ -211,7 +206,7 @@ export function respond(opts) {
       fs.writeFile(htmlPath, tpl)
 
       //log(opts);
-      if (opts.liveReload) {
+      if (opts.live_reload) {
 
         if (tpl.indexOf('</html>')>=0) { // attach autoreload script only once
           tpl += "<script>\n"
