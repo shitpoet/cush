@@ -79,6 +79,7 @@ export fun clone_node(node, parent) {
 }
 
 export function TplParser() {
+  let opts = {}
 
   let at_include = s => s.s=='+' && s.s2=='include'
 
@@ -101,10 +102,14 @@ export function TplParser() {
     //todo: PL parse prduces childs==null here
     //let ast = pipeline.parse(fn)
 
+    //log('parse include opts ',opts)
+
+    //if !opts.php_mode {
+
     let toks = pipeline.tokenize(fn)
 
     var ts = new TokStream(toks)
-    var ast = parse(ts)
+    var ast = parse(ts, opts)
 
     if Object.keys(attrs).length > 0
 
@@ -130,9 +135,30 @@ export function TplParser() {
       child.parent = parent
     }*/
 
-    return ast
-    //let node = new_node(paret)
-    //return parse_childs(node, s2
+    if !opts.php_mode
+      return ast
+    else
+      ast = new_node(parent)
+      log('render partial '+fn)
+      let vars = {}
+      for k in projectInfo.variables
+        vars[k] = projectInfo.variables[k]
+      for k in attrs
+        vars[k] = attrs[k]
+      //let res = pipeline.render(fn, opts, projectInfo.variables)
+      let res = pipeline.render(fn, opts, vars)
+      fn = fn.replace('.tpl', '.php')
+      fs.writeFile(fn, res)
+      ast.text = '<?php include "'+fn+'"; ?>'
+      ast.startTok = s.t
+      ast.endTok = s.t
+      ast.wsBefore = tt.nl
+      ast.wsAfter = tt.nl
+      return ast
+
+    /*} else { // php mode
+
+    }*/
   }
 
   function getKnownTag(tagName) {
@@ -437,12 +463,11 @@ export function TplParser() {
 
   fun postparse_links(node){
     //if (node) {
-    if (node.tag) {
+    if node.tag {
       let tag_name = node.tag.name
       if tag_name=='a' {
-        if (!('href' in node.attrs)) {
+        if !('href' in node.attrs)
           node.attrs.href = '#'
-        }
       } else if tag_name=='img' {
         if ('src' in node.attrs) {
           let src = node.attrs.src
@@ -450,17 +475,22 @@ export function TplParser() {
             !src.startsWith('img/') &&
             !src.startsWith('http') &&
             !src.startsWith('//') &&
-            !src.startsWith('../')
+            !src.startsWith('../') &&
+            !src.startsWith('[[')
           ) {
             src = 'img/'+node.attrs.src
             node.attrs.src = src
           }
           if (
             !src.startsWith('data') &&
+            !src.startsWith('[[') && // php var
             !(src.endsWith('.png') ||
             src.endsWith('.jpg'))
           )
             src += '.png'
+            node.attrs.src = src
+          if opts.php_mode && !src.startsWith('/') && !src.startsWith('[[')
+            src = '/'+src
             node.attrs.src = src
         }
       }
@@ -571,7 +601,8 @@ export function TplParser() {
       //log('posttpl.js !!!!!!!!!!!!!')
   }
 
-  var parse = this.parse = function(s) {
+  var parse = this.parse = fun(s, parse_opts) {
+    opts = parse_opts
     let root = new_node(null)
     root.childs = parseChilds(root, s)
     postparse(root)

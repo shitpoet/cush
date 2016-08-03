@@ -112,15 +112,35 @@ export fun fix_ast(node)
     for child of node.childs
       fix_ast(child)
 
-export fun compileTemplate(ast) {
+fun postexpand(node, opts)
+  //if opts.php_mode
+  l('postexpand')
+  if node
+    if opts.php_mode
+      if node.tag && node.tag.name=='a'
+        //l(node)
+        let href = node.attrs.href
+        if href
+          l('php_mode: postexpand link '+href)
+          if href.endsWith('.html')
+            href = href.replace('.html', '')
+            node.attrs.href = href
+    for (let child of node.childs)
+      if (child)
+        postexpand(child, opts)
+
+export fun compileTemplate(ast, opts) {
 
   return function(vars) {
-    log('--- stringify tpl ---')
+    //log('--- stringify tpl ---')
     var out = new OutStream()
     //ast.dump()
     let scope = new SourceScope()
     scope.push(vars)
     expand_ast(ast, scope)
+
+    postexpand(ast, opts)
+
     stringifyTemplate(ast, out, -1)
     return out.getText()
   }

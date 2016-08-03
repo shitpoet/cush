@@ -1,15 +1,16 @@
 "use strict"
 
-let logging = true
+let _logging = false
 function log(...args) {
-  if (logging) console.log(...args)
+  if (_logging) console.log(...args)
 }
-let timing = true
+let l = log
+let _timing = false
 function time(...args) {
-  if (timing) console.time(...args)
+  if (_timing) console.time(...args)
 }
 function timeEnd(...args) {
-  if (timing) console.timeEnd(...args)
+  if (_timing) console.timeEnd(...args)
 }
 
 let hot = true
@@ -665,8 +666,8 @@ function update_source(script, code) {
     Debug.LiveEdit.SetScriptSource(script, code, false, cl)
     //log(cl)
   } catch(e) {
-    err('update script')
-    err(e)
+    console.error('update script')
+    console.error(e)
   }
 }
 
@@ -761,7 +762,7 @@ let include = global.include = module.exports = function(names, opts) {
 
       try {
         //log('rewrited');log(code.trim())
-        var script = new vm.Script(code, {filename: fn})
+        var script = new vm.Script(code, {filename: fn, displayErrors: true})
 
         //global[`__script_${name}`] = script
         // simple (introduces top level variables to global scope
@@ -770,8 +771,8 @@ let include = global.include = module.exports = function(names, opts) {
         //}.bind(global)()
         //vm.runInThisContext(code, fn)
       } catch (e) {
-        err('compilation')
-        err(e)
+        console.error('compilation')
+        console.error(e)
         return;
       }
 

@@ -3,6 +3,14 @@
 let logging = true
 let timing = false
 
+//todo: refactor
+export fun postprocess_php(tpl)
+  tpl = tpl.replace(/\[\[(.*?)\]\]/g, '<?php if (isset($$$1)) echo $$$1?>')
+  //tpl = tpl.split('[[').join('<?php echo $')
+  //tpl = tpl.split(']]').join('?>')
+  ret tpl
+///////////////////
+
 export let pipeline = {
   _cache: {},
   _posts: {}, // postprocessors
@@ -46,10 +54,10 @@ export let pipeline = {
       (fn in c) &&
       (c[fn].mtime == mtime)
     ) {
-      log('cache: '+fn+' is cached')
+      log('cache: read '+fn)
       return c[fn]
     } else {
-      log('cache: '+fn+' is not cached')
+      //log('cache: '+fn+' is not cached')
       //let source = fs.readFileSync(fn,'utf8')
       let source = read_and_curlify(fn)
       let entry = {
@@ -69,10 +77,11 @@ export let pipeline = {
     let c = this._cache
     let entry = this.get_entry(fn)
     if (!entry.toks) {
-      log('cache: '+fn+' is not tokenized')
+      //log('cache: '+fn+' is not tokenized')
+      log('cache: tokenize '+fn)
       entry.toks = tokenize(fn, entry.source)
     } else {
-      log('cache: '+fn+' is tokenized')
+      //log('cache: '+fn+' is tokenized')
       //log(entry.toks)
       let toks = entry.toks
       for (let tok of toks) {
@@ -86,21 +95,22 @@ export let pipeline = {
     return entry.toks
   },
 
-  parse(fn) {
+  parse(fn, opts) {
     let c = this._cache
     let entry = this.get_entry(fn)
     if (entry.ast) {
-      log('cache: '+fn+' is parsed')
+      //log('cache: '+fn+' is parsed')
+      log('cache: parse  '+fn)
     } else {
       let toks = this.tokenize(fn)
-      log('cache: '+fn+' is not parsed')
+      //log('cache: '+fn+' is not parsed')
       var s = new TokStream(toks)
       if fn.endsWith('.tpl') {
         var tplparser = new TplParser()
-        entry.ast = tplparser.parse(s)
+        entry.ast = tplparser.parse(s, opts)
       } else if fn.endsWith('.stl') {
         var stlparser = new StlParser()
-        entry.ast = stlparser.parse(s)
+        entry.ast = stlparser.parse(s, opts)
       } else {
         throw new Error('pipeline: unknown file type '+fn)
       }
@@ -108,38 +118,43 @@ export let pipeline = {
     return entry.ast
   },
 
-  compile(fn) {
+  compile(fn, opts) {
     let c = this._cache
     let entry = this.get_entry(fn)
     if (entry.code!==null) {
-      log('cache: '+fn+' is compiled')
+      //log('cache: '+fn+' is compiled')
+      log('cache: compile '+fn)
     } else {
-      this.parse(fn)
-      log('cache: '+fn+' is not compiled')
+      this.parse(fn, opts)
+      //log('cache: '+fn+' is not compiled')
       if fn.endsWith('.tpl') {
         time('compileTemplate')
-        entry.code = compileTemplate(entry.ast)
+        entry.code = compileTemplate(entry.ast, opts)
         timeEnd('compileTemplate')
       } else {
         time('compileStyle')
-        entry.code = compileStyle(entry.ast)
+        entry.code = compileStyle(entry.ast, opts)
         timeEnd('compileStyle')
       }
     }
     return entry.code
   },
 
-  render(fn, vars) {
+  render(fn, opts, vars) {
     let c = this._cache
     let entry = this.get_entry(fn)
     if (entry.str!==null) {
-      log('cache: '+fn+' is rendered')
+      //log('cache: '+fn+' is rendered')
+      log('cache: render '+fn)
     } else {
-      this.compile(fn)
-      log('cache: '+fn+' is not rendered')
+      this.compile(fn, opts)
+      //log('cache: '+fn+' is not rendered')
       time('pipeline.render')
-      entry.str = entry.code(projectInfo.variables)
+      entry.str = entry.code(vars)
       timeEnd('pipeline.render')
+      if fn.endsWith('.tpl')
+        if opts.php_mode
+          entry.str = postprocess_php(entry.str)
       if fn.endsWith('.stl')
         if 'stl' in this._posts
           time('pipeline.postprocess')
@@ -196,3 +211,4 @@ export let pipeline = {
       this._posts[fmt].push(cb)
 
 }
+

@@ -7,6 +7,8 @@ var socket = io('http://'+hostname+':SIO_PORT')
 
 var cssVer = 0
 
+var cush_opts = {}
+
 function getScrollTop() {
   return document.documentElement.scrollTop || document.body.scrollTop
 }
@@ -105,6 +107,10 @@ socket.on('event', function(data){
 socket.on('disconnect', function(){
   console.log('sio disconnect')
 });
+socket.on('opts', function(data){
+  console.log('sio opts', data)
+  cush_opts = data
+})
 socket.on('reload', function(data){
   console.log('sio reload')
   document.location.reload()

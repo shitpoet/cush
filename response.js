@@ -79,7 +79,7 @@ fun renderStyle(fn, str) {
   return res
 }*/
 
-fun renderTemplate(fn) {
+fun renderTemplate(fn, opts) {
   time('renderTemplate')
 
   /*let ast = pipeline.parse(fn)
@@ -88,7 +88,7 @@ fun renderTemplate(fn) {
   var res = func(projectInfo.variables)
   console.timeEnd('compileTemplate')*/
 
-  let res = pipeline.render(fn, projectInfo.variables)
+  let res = pipeline.render(fn, opts, projectInfo.variables)
 
   timeEnd('renderTemplate')
   return res
@@ -101,7 +101,7 @@ fun renderStyle(fn) {
   var func = compileStyle(ast)
   let res = func(projectInfo.variables)
   console.timeEnd('compileStyle')*/
-  let res = pipeline.render(fn, projectInfo.variables)
+  let res = pipeline.render(fn, {}, projectInfo.variables)
   timeEnd('renderStyle')
   return res
 }
@@ -109,11 +109,13 @@ fun renderStyle(fn) {
 export function respond(opts) {
   client_code = make_client_code(opts)
   return function (req, res) {
-    var renderOpts = {
-      skipPhpTags: projectInfo.variables.phpMode,
-      recursiveRender: !projectInfo.variables.phpMode
+    var render_opts = {
+      //skip_php_tags: projectInfo.variables.php_mode,
+      //recursive_render: !projectInfo.variables.php_mode
+      //recursive_render: !opts.php_mode
+      php_mode: opts.php_mode
     }
-    //log('render opts',renderOpts)
+    log('render opts', render_opts)
 
     //console.log('HTTP '+req.url)
     var url = req.url
@@ -169,7 +171,7 @@ export function respond(opts) {
       lastTplPath = tplPath
       lastPageVars = pageVars
       try {
-        /*if (renderOpts.skipPhpTags) {
+        /*if (render_opts.skip_php_tags) {
           log('skip php tags')
           tpl = tpl.split('<?=$').join('PHP_ECHO_VAR_TAG')
           tpl = tpl.split('<?=').join('PHP_ECHO_TAG')
@@ -178,16 +180,15 @@ export function respond(opts) {
           tpl = tpl.split('?>').join('PHP_CLOSE_TAG')
         }*/
         //tpl = renderTemplate(tplPath, tpl)
-        tpl = renderTemplate(tplPath)
-        //tpl = view.render(tplPath, tpl, lastStlPath, lastStl, [projectInfo.vars, pageVars], renderOpts).tpl
+        tpl = renderTemplate(tplPath, render_opts)
+        //tpl = view.render(tplPath, tpl, lastStlPath, lastStl, [projectInfo.vars, pageVars], render_opts).tpl
+
+        if opts.php_mode
+          tpl = postprocess_php(tpl)
+
         lastHtmls[tplPath] = tpl
         //lastHtml = tpl
-        /*if (renderOpts.skipPhpTags) {
-          tpl = tpl.split('PHP_ECHO_VAR_TAG').join('<?php echo $')
-          tpl = tpl.split('PHP_ECHO_TAG').join('<?php echo ')
-          tpl = tpl.split('PHP_OPEN_TAG').join('<?php ')
-          tpl = tpl.split('PHP_CLOSE_TAG').join('?>')
-        }*/
+
         if (opts.onSetLastError) opts.onSetLastError(tplPath, null)
       } catch (e) {
         panic('catch tpl parse error')
@@ -203,10 +204,27 @@ export function respond(opts) {
 
       //log(tpl)
 
-      fs.writeFile(htmlPath, tpl)
+      if opts.php_mode
+        htmlPath = htmlPath.replace('.html', '.php')
+        if opts.live_reload {
+          if (tpl.indexOf('</html>')>=0) { // attach autoreload script only once
+            tpl += "<script>\n"
+            tpl += client_code
+            //tpl += getFile(__dirname+'/lib/socket.io.js')
+            //tpl += getFile(__dirname+'/reload.js')
+            tpl += "</script>"
+            //tpl += "<script src='http://localhost:8888/RELOAD.js'></script>"
+          }
+          //}
+        }
+
+      if opts.php_mode
+        fs.writeFileSync(htmlPath, tpl)
+      else
+        fs.writeFile(htmlPath, tpl)
 
       //log(opts);
-      if (opts.live_reload) {
+      if opts.live_reload && !opts.php_mode {
 
         if (tpl.indexOf('</html>')>=0) { // attach autoreload script only once
           tpl += "<script>\n"
@@ -220,16 +238,6 @@ export function respond(opts) {
       }
 
       res.end(tpl)
-      //putFile(htmlPath, tpl)
-      if (projectInfo.variables.phpMode) {
-        /*if htmlPath=='index.html') { // main page
-          htmlPath = 'home.php';
-        } else*/ if (htmlPath.startsWith('_')) { // partial
-          htmlPath = 'theme/'+htmlPath.replace('html','php')
-        } else { // page
-          htmlPath = 'theme/page-'+htmlPath.replace('html','php')
-        }
-      }
 
     } else if (ext=='css' && exists(stlPath)) {
     //} else if (pagename.startsWith('style.css')) {

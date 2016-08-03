@@ -15,8 +15,7 @@ include('prefix')
 let sio = null
 let sio_port = projectInfo.port*10
 
-var lastServerErrors = {
-}
+var lastServerErrors = {}
 
 function send_error(source, e) {
   sio.sockets.emit('error', {source: source, error: e})
@@ -43,6 +42,8 @@ export let devServer = {
     if opts.live_reload
       sio.on('connection', function (socket) {
         log('io connection')
+        // set opts
+        sio.sockets.emit('opts', opts)
         // when the client emits 'new message', this listens and executes
         socket.on('new message', function (data) {
           // we tell the client to execute 'new message'
@@ -62,7 +63,7 @@ export let devServer = {
         }
       });
 
-    if (!opts.phpMode) {
+    //if (!opts.phpMode) {
 
       chokidar.watch([
         __dirname+'/*.js', //buggy: causes generation of unlinkDir and bugs with on 'all' events listener
@@ -92,7 +93,42 @@ export let devServer = {
           //process.exit(5)
           sio.sockets.emit('reload')
         } else if (path.endsWith('.tpl')) {
-          if path.startsWith('_')
+          if opts.php_mode
+            // produce php
+
+            //tofix: shit code make request to render tpl to php
+            log('tofix: shit code make request '+path+' to render tpl to php')
+            let http = require('http');
+
+            let options = {
+              host: 'wood-eco-wp',
+              port: 80,
+              path: '/' + path.split('.tpl')[0]
+            };
+            log(options)
+
+            let callback = function(response) {
+              var str = '';
+
+              //another chunk of data has been recieved, so append it to `str`
+              response.on('data', function (chunk) {
+                //str += chunk;
+              });
+
+              //the whole response has been recieved, so we just print it out here
+              response.on('end', function () {
+
+                console.log('shit rerender request', str);
+
+                // reload
+                sio.sockets.emit('reload')
+              });
+            }
+
+            http.request(options, callback).end();
+
+
+          elif path.startsWith('_')
             log('partial template - clear root tpl cache') //tofix: add dependencies or make something to do clearing of the cache smarter
             pipeline.clear_root_templates()
             sio.sockets.emit('reload')
@@ -101,7 +137,7 @@ export let devServer = {
               path.split('/').pop().split('.')[0]
             )
         } else if (path.endsWith('.stl')) {
-          if (path.split('/').pop().startsWith('_')) {
+          if path.split('/').pop().startsWith('_') {
             log('partial style - clear cache') //tofix
             pipeline.clear_root_styles()
             // reload main style sheet
@@ -122,7 +158,7 @@ export let devServer = {
         //}
       });
 
-    } else { // php mode
+    if false { // php mode
 
       log('php mode watch')
 
@@ -146,35 +182,7 @@ export let devServer = {
 
             //response.respond(opts)(
 
-
-            //tofix: shit code make request to render tpl to php
-            log('tofix: shit code make request to render tpl to php')
-
-            var http = require('http');
-
-            //The url we want is: 'www.random.org/integers/?num=1&min=1&max=10&col=1&base=10&format=plain&rnd=new'
-            var options = {
-              host: 'localhost',
-              port: 8888,
-              path: '/' + path.split('.tpl')[0]
-            };
-
-            callback = function(response) {
-              var str = '';
-
-              //another chunk of data has been recieved, so append it to `str`
-              response.on('data', function (chunk) {
-                //str += chunk;
-              });
-
-              //the whole response has been recieved, so we just print it out here
-              response.on('end', function () {
-
-                console.log('shit rerender request', str);
-              });
-            }
-
-            http.request(options, callback).end();
+            ///////
 
           } else if (path.endsWith('cush.json')) {
             log('reload json')

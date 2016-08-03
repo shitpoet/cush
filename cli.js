@@ -22,9 +22,9 @@ if (argv.length == 1 && (argv[0]=='-h' || argv[0]=='--help')) {
   }*/
   serverOpts.live_reload = argv.indexOf('r')>=0
   serverOpts.autoprefix = argv.indexOf('ap')>=0
-  serverOpts.phpMode = argv.indexOf('php')>=0
-  if (serverOpts.liveReload) log('live reloading')
+  serverOpts.php_mode = argv.indexOf('php')>=0
+  if (serverOpts.live_reload) log('live reloading')
   if (serverOpts.autoprefix) log('autoprefixing')
-  if (serverOpts.phpMode) log('php mode')
+  if (serverOpts.php_mode) log('php mode')
   devServer.listen(serverOpts)
 }
