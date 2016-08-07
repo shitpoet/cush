@@ -54,7 +54,7 @@ export let pipeline = {
       (fn in c) &&
       (c[fn].mtime == mtime)
     ) {
-      log('cache: read '+fn)
+      log('cache: read  '+fn)
       return c[fn]
     } else {
       //log('cache: '+fn+' is not cached')
@@ -78,7 +78,7 @@ export let pipeline = {
     let entry = this.get_entry(fn)
     if (!entry.toks) {
       //log('cache: '+fn+' is not tokenized')
-      log('cache: tokenize '+fn)
+      log('cache: token '+fn)
       entry.toks = tokenize(fn, entry.source)
     } else {
       //log('cache: '+fn+' is tokenized')
@@ -100,7 +100,7 @@ export let pipeline = {
     let entry = this.get_entry(fn)
     if (entry.ast) {
       //log('cache: '+fn+' is parsed')
-      log('cache: parse  '+fn)
+      log('cache: parse '+fn)
     } else {
       let toks = this.tokenize(fn)
       //log('cache: '+fn+' is not parsed')
@@ -123,7 +123,7 @@ export let pipeline = {
     let entry = this.get_entry(fn)
     if (entry.code!==null) {
       //log('cache: '+fn+' is compiled')
-      log('cache: compile '+fn)
+      log('cache: compl '+fn)
     } else {
       this.parse(fn, opts)
       //log('cache: '+fn+' is not compiled')

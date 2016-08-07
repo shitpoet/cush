@@ -5,7 +5,7 @@ let logging = {
 
   'devserver': true,
   'parse': false,
-  'pipeline': true,
+  'pipeline': false,
   tplcompile: false,
   'log': true,
   'response': false,

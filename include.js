@@ -20,6 +20,8 @@ let Module = require('module')
 let path = require('path')
 //let fs = require('fs')
 let vm = require('vm')
+let buffer = require('buffer')
+let Buffer = buffer
 
 let chokidar
 if (hot) chokidar = require('chokidar') // for hot reloading

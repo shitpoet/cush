@@ -41,6 +41,49 @@ function clone_compound_sel(csel) {
 
 /* build flattened, full compound selectors
 
+  go through stack of rules
+  and build flat compound selectors
+
+  one compound selector is array of simple selectors
+
+  clones selectors while builidng to allow of mutation
+  of any node without affecting anothers (several nodes
+  may be childs of one (because of for loops for example)
+  so in flattened selectors selector of parent node
+  will be repeated (cloned) for all children)
+
+  a, b
+    x, y, z
+
+  -->
+
+  a, b
+  a x, a y, a z,  b x, b y, b z
+
+  todo: avoid this cloning if it possible */
+function build_full_csels(stack, rule) {
+  let full_csels = []
+
+  for rule of stack
+    if rule && rule.csels.len > 0
+      if full_csels.len == 0 // first parent with csels
+        for csel of rule.csels
+          let csel_copy = clone_compound_sel(csel)
+          full_csels.push( csel_copy )
+      else
+        let parent_full_csels = full_csels
+        full_csels = []
+        for parent_full_csel of parent_full_csels
+          for csel of rule.csels
+            let full_csel = parent_full_csel.concat( csel )
+            let full_csel_copy = clone_compound_sel(full_csel)
+            full_csels.push(full_csel_copy)
+
+  return full_csels
+}
+
+/* build flattened, full compound selectors
+
   go up through rules hierarchy
   and build flat compound selectors
 
@@ -52,6 +95,9 @@ function clone_compound_sel(csel) {
   of parent node will be repeated for all children)
 
   todo: avoid this cloning if its possible */
+/*
+// implementation with explicit `parent` reference
+// can not handle cross-linked nodes correctly
 function build_full_csels(rule) {
   let csels = rule.csels
   let full_csels = []
@@ -73,7 +119,7 @@ function build_full_csels(rule) {
     }
   }
   return full_csels
-}
+}*/
 
 function concat_cnames(parent_cname, cname) {
   if (cname.startsWith('_'))
@@ -203,8 +249,8 @@ function process_full_csels(full_csels) {
   return pcsels
 }
 
-function sels_to_strs(rule, csels) {
-  let full_csels = build_full_csels(rule, csels)
+function sels_to_strs(stack, rule, csels) {
+  let full_csels = build_full_csels(stack, rule, csels)
   //log(util.inspect({csels},{depth:null}))
 
   /*log('full csels')
@@ -263,8 +309,8 @@ function sels_to_strs(rule, csels) {
   return strs
 }
 
-fun write_sels(rule, out, rule_depth) {
-  let strs = sels_to_strs(rule, rule.csels)
+fun write_sels(stack, rule, out, rule_depth) {
+  let strs = sels_to_strs(stack, rule, rule.csels)
   out.write(strs.join(', ')+' ', rule_depth)
 }
 
@@ -285,7 +331,7 @@ fun write_decls(rule, decls, out, rule_depth)
     out.write(name+': '+value+';', prop_depth)
     out.nl()
 
-fun write_block(rule, out, rule_depth) {
+fun write_block(stack, rule, out, rule_depth) {
   let prop_depth = rule_depth + 1
   out.write('{', rule_depth)
   out.nl()
@@ -293,9 +339,10 @@ fun write_block(rule, out, rule_depth) {
   out.write('}', rule_depth);
 }
 
-fun stringifyRule(prefix, rule, out, scope, depth) {
+fun stringifyRule(parent_stack, prefix, rule, out, scope, depth) {
   var rule_depth = 0
   if (rule) {
+    let stack = parent_stack.concat(rule)
 
     /*if (rule.pipeline_entry) {
 
@@ -303,52 +350,53 @@ fun stringifyRule(prefix, rule, out, scope, depth) {
 
     } else {*/
 
-      if (rule.cmnt) {
-        out.nlnl()
-        out.write('/*'+rule.cmnt+'*/', rule_depth)
-        out.nlnl()
-      }
+    if (rule.cmnt) {
+      out.nlnl()
+      out.write('/*'+rule.cmnt+'*/', rule_depth)
+      out.nlnl()
+    }
 
-      if (rule.raw) {
-        out.nlnl()
-        //log('RAW "'+rule.raw+'"')
-        out.write(rule.raw.trim(), rule_depth)
-        out.nlnl()
-      }
+    if (rule.raw) {
+      out.nlnl()
+      //log('RAW "'+rule.raw+'"')
+      out.write(rule.raw.trim(), rule_depth)
+      out.nlnl()
+    }
 
-      let have_sels = rule.csels && rule.csels.length > 0
-      if have_sels {
-        write_sels(rule, out, rule_depth)
-        write_block(rule, out, rule_depth)
+    let have_sels = rule.csels && rule.csels.length > 0
+    if have_sels {
+      write_sels(stack, rule, out, rule_depth)
+      write_block(stack, rule, out, rule_depth)
+      out.nlnl()
+    } else if rule.atrule {
+      let {name,params} = rule.atrule
+      if name=='media' {
+        out.write(`@${name} ${params} {`, rule_depth)
+        out.nl()
+        write_sels(stack, rule.parent, out, rule_depth+1)
+        write_block(stack, rule, out, rule_depth+1)
+        out.nl()
+        out.write(`}`, rule_depth)
         out.nlnl()
-      } else if rule.atrule {
-        let {name,params} = rule.atrule
-        if name=='media' {
-          out.write(`@${name} ${params} {`, rule_depth)
-          out.nl()
-          write_sels(rule.parent, out, rule_depth+1)
-          write_block(rule, out, rule_depth+1)
-          out.nl()
-          out.write(`}`, rule_depth)
-          out.nlnl()
-        } else {
-          out.write(`@${name} `, rule_depth)
-          write_block(rule, out, rule_depth)
-          out.nlnl()
-        }
+      } else {
+        out.write(`@${name} `, rule_depth)
+        write_block(stack, rule, out, rule_depth)
+        out.nlnl()
       }
+    }
 
-      // nested rules
-      for child of rule.childs {
-        stringifyRule(prefix, child, out, scope, depth+1)
-      }
+    // nested rules
+    for child of rule.childs {
+      stringifyRule(stack, prefix, child, out, scope, depth+1)
+    }
 
     //}
   }
 }
 
 export function stringifyStyle(ast, out, scope, depth) {
-  stringifyRule('', ast, out, scope, depth)
+  let stack = []
+  stringifyRule(stack, '', ast, out, scope, depth)
 }
 
 export fun log_class_stats() {

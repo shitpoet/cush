@@ -73,11 +73,11 @@ export function StlParser() {
 
   function push_childs(arr, childs) {
     if (childs) {
-      if ('isArray' in childs && childs.isArray()) {
-        arr = arr.concat(childs)
-      } else {
+      //l('push_childs', ' is array ? ', Array.isArray(childs))
+      if childs instanceof Array
+        Array.prototype.push.apply(arr, childs);
+      else
         arr.push(childs)
-      }
     }
   }
 
@@ -125,6 +125,8 @@ export function StlParser() {
     return s.s=='+' && is_id(s.t2) && s.s2!='include'
   }
 
+  //fixme: returns decls, but also mixs in nested rules directy to rule
+  // so - not pure function with incosistent behaviour
   fun parse_mixin_call(rule, s) {
     s.skip('+')
     let mixin_name = scan_word(s)
@@ -132,6 +134,13 @@ export function StlParser() {
     if (rule_index[mixin_name]) {
       //log('found top-level rule for mixin')
       let origin = rule_index[mixin_name]
+
+      //fixme:here: here we copy nested rules from mixin to target
+      // we cant just copy origin rules cuz
+      //fixme: we need to make their `parent` references correct
+      // as an alternative this reference can be made implicit?
+      push_childs(rule.childs, origin.childs);
+
       let decls = []
       for (let name in origin.decls) {
         //log(`copy prop ${name} = ` + origin.decls[name].value)
@@ -460,9 +469,13 @@ export function StlParser() {
     s.t.line.obs--
     s.skip('{')
     rule.decls = parse_decls(rule, s)
-    rule.childs = parse_nested_rules(rule, s)
+    //rule.childs = parse_nested_rules(rule, s)
+    push_childs(rule.childs, parse_nested_rules(rule, s))
     s.skip('}')
-    if (parent.parent==null) { //tofix: move this out of parser?
+
+    // add rule to global rule index
+    //tofix: move this out of parser?
+    if (parent.parent==null) {
       if (rule.csels.length == 1) {
         let csel = rule.csels[0]
         if (csel.length == 1) {
@@ -475,6 +488,7 @@ export function StlParser() {
         }
       }
     }
+
     return rule
   }
 
