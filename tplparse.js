@@ -474,7 +474,7 @@ export function TplParser() {
           if (
             !src.startsWith('img/') &&
             !src.startsWith('http') &&
-            !src.startsWith('//') &&
+            !src.startsWith('/') &&
             !src.startsWith('../') &&
             !src.startsWith('[[')
           ) {

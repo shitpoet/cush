@@ -136,9 +136,6 @@ export function StlParser() {
       let origin = rule_index[mixin_name]
 
       //fixme:here: here we copy nested rules from mixin to target
-      // we cant just copy origin rules cuz
-      //fixme: we need to make their `parent` references correct
-      // as an alternative this reference can be made implicit?
       push_childs(rule.childs, origin.childs);
 
       let decls = []
