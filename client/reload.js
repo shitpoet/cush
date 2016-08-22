@@ -41,7 +41,6 @@ function reload_html(name) {
   var href = document.location.href
   var page = href.split(/[\/#\?]/).pop().split('.').shift()
   if (page=='') page = 'index'
-  console.log({page, name})
   if(name==page) { // reload html only w/o resources
     fetch(page).then(function(r){
       r.text().then(function(text){

@@ -1,6 +1,6 @@
 "use strict"
 
-let _logging = false
+let _logging = true
 function log(...args) {
   if (_logging) console.log(...args)
 }
@@ -466,6 +466,23 @@ function wrap_module(name, code, exports, opts) {
   return '!function(){' + code + '}()'
 }
 
+function sandbox_module(mod_name, code, exports, opts) {
+  if (!opts.sloppy) {
+    code = "'use strict';" + code
+  }
+  code += ';' +
+    exports.map(
+      (name) => ('$__modules.'+mod_name+'.exports.'+name+'='+name)
+    ).join(';') +
+    //';function __eval_here(code) { return eval(code) }' +
+    //";global['__eval_"+mod_name+"'] = __eval_here;"
+    //+log_code;
+    ";function use(name){superglobal.use(name,global)}"
+  //log(code)
+  return code
+  //return '!function(){' + code + '}()'
+}
+
 function add_tok_patch(patches, tok, str) { patches.push({tok, str}) }
 
 // collect and patch imports
@@ -475,7 +492,7 @@ function add_tok_patch(patches, tok, str) { patches.push({tok, str}) }
 // these imports are converted to refs to globals:
 //   - const   {name}  =    global
 //   - const   {name1, name2}  =    global
-function patch_imports(toks, patches) {
+function patch_imports_v0(toks, patches) {
   for (let tok of toks) {
     if (is_id(tok) && tok.s=='import' && is_sp(tok.next)) {
       if (tok.next.next.s == '{') {
@@ -490,6 +507,20 @@ function patch_imports(toks, patches) {
     }
   }
 }
+
+/*function patch_imports(toks, patches) {
+  let names = []
+  for (let tok of toks) {
+    if (is_id(tok) && tok.s=='import' && is_sp(tok.next)) {
+      let name_tok = tok.next.next
+      names.push( name_tok.s )
+      //log('imported mod', name_tok.s)
+      //patch_tok(tok,'//import')
+      add_tok_patch(patches, tok, '//import')
+    }
+  }
+  ret names
+}*/
 
 // collect and patch exports
 // returns list of exported symbols
@@ -646,6 +677,36 @@ function read_and_rewrite(fn, moduleName, opts) {
   return wrap_module(moduleName, code, exports, opts)
 }
 
+
+function prepare_module(fn, mod_name, opts) {
+  //log('prepare_module '+fn)
+  let code = read_and_curlify(fn)
+  let toks = tokenize(mod_name, code)
+  opts = opts ? opts : {}
+  //log(code)
+  //dumpTokens(toks)
+  let patches = []
+  //patch_fun(toks, patches)
+  //patch_ifs(toks, patches)
+  //patch_imports(toks, patches)
+  //let imports = patch_imports(toks, patches)
+  let exports = patch_exports(toks, patches)
+  patch_seals(toks, patches)
+  code = apply_tok_patches(code, patches)
+  code = sandbox_module(mod_name, code, exports, opts)
+  let sandbox = {
+    __modname: mod_name,
+    $__modules: $__modules,
+    process, console, require, __dirname,
+  }
+  sandbox.global = sandbox
+  sandbox.superglobal = global
+  $__modules[mod_name].exports = {}
+  $__modules[mod_name].export_names = exports
+  return { code, sandbox, exports }
+}
+
+
 function findScript(fn) {
   log('v8debug: get scripts')
   let ss = Debug.scripts()
@@ -707,6 +768,7 @@ function name_to_fn(name) {
   if (!fn.endsWith('.js')) fn += '.js'
   return fn
 }
+
 
 let include = global.include = module.exports = function(names, opts) {
   //let reload = arguments.length > 1 ? arguments[1] : false
@@ -798,6 +860,144 @@ let include = global.include = module.exports = function(names, opts) {
     }
   }
 }
+
+global.$__modules = {}
+
+global.use = function(names, ctx, opts) {
+
+  function update(name) {
+    log('use: update script '+name)
+    let fn = name_to_fn(name)
+    log('use: fn '+fn)
+    //let fn = __dirname+"/"+name+".js"
+    log('use: find script for '+fn)
+    let script = findScript(fn)
+    //log(script)
+    /*log('v8debug: read file '+fn)
+    let code = fs.readFileSync(fn, 'utf8')
+    log('v8debug: rewrite')
+    code = rewrite(name, code, true)8?*/
+
+    time('rewrite (use)')
+    //log('original');log(code.trim())
+    let {code} = prepare_module(fn, name, {})
+    timeEnd('rewrite (use)')
+
+    ///////
+
+    update_source(script, code)
+
+    log('use: done')
+  }
+
+  //log('use '+name+' ctx ',ctx)
+
+  let parent_mod_name = ''
+  if (ctx && ('__modname' in ctx)) {
+    log('parent mod name', ctx.__modname)
+    parent_mod_name = ctx.__modname
+  } else {
+    log('parent mod name (global)')
+  }
+
+  if (typeof opts == 'undefined') opts = {}
+
+  names = names.split(' ')
+  for (let i = 0; i < names.length; i++) {
+    let name = names[i]
+
+    if (name == parent_mod_name)
+      throw err('module '+name+' uses itself')
+
+    if (!(name in cache) || opts.reload) {
+      log(name+' ' + (opts.sloppy?'(sloppy)':''));
+
+      cache[name] = opts
+
+      $__modules[name] = {
+        exports: {},
+        export_names: [],
+        parent_contexts: []
+      }
+
+      let fn = name_to_fn(name)
+      /*var sandbox = {
+        require,
+        __dirname: path.dirname(fn),
+        __filename: fn,
+        log: log,
+        setInterval: setInterval
+      }
+      var context = new vm.createContext(sandbox)*/
+
+      time('rewrite')
+      //log('original');log(code.trim())
+      let {code, sandbox} = prepare_module(fn, name, opts)
+      timeEnd('rewrite')
+
+      try {
+        /*var script = new vm.Script(code, {filename: fn, displayErrors: true})
+        script.runInThisContext()*/
+
+        /*let sandbox  = {
+          console, require,
+        }
+        sandbox.global = sandbox        */
+
+        let script = new vm.Script(code, {filename: fn, displayErrors: true})
+        let ctx = new vm.createContext(sandbox)
+        script.runInContext(ctx)
+
+        //log($__modules)
+
+      } catch (e) {
+        console.error('compilation error')
+        console.error(e)
+        return;
+      }
+
+      if (opts.reload) {
+        //monkeyPatch(name, code)
+        update(name)
+      } else if (hot) {
+        chokidar.watch(fn).on('change', function(path) {
+          log('script changed')
+          let opts = cache[name]
+          cache.delete(name)
+          opts.reload = true
+          use(name, null, opts)
+        })
+      }
+
+      /*__eval: global[__eval_+name]
+      }*/
+    } else {
+      log(name+' (cached)');
+    }
+
+    // bind variables
+    if (!opts.reload) {
+      if (typeof ctx == 'undefined') ctx = global
+      let parent_ctxs = $__modules[name].parent_contexts
+      if (parent_ctxs.indexOf(ctx) < 0)
+        parent_ctxs.push( ctx )
+      let mod_exports = $__modules[name].exports
+      let i = 0;
+      for (let parent_ctx of parent_ctxs) {
+        for (let exp_name in mod_exports) {
+          //log("bind " + name + '.' + exp_name + ' to ' + (parent_mod_name?parent_mod_name:'(global)'))
+          log("bind " + name + '.' + exp_name + ' to ctx ' + i)
+          parent_ctx[exp_name] = mod_exports[exp_name]
+        }
+        i++
+      }
+    }
+
+  } // for each name
+}
+
+
+
 
 //load('./m1.js')
 

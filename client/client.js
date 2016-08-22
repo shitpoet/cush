@@ -9,6 +9,8 @@ on(window, 'keydown', function(e){
     log(name)
     if(name) {
       document.location.href = '/'+name } }
+  else if(e.altKey && k=='O'.charCodeAt(0)) {
+    window.open('#', '', {toolbar:false}) }
   log(k, e)
 })
 
