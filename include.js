@@ -20,8 +20,10 @@ let Module = require('module')
 let path = require('path')
 //let fs = require('fs')
 let vm = require('vm')
-let buffer = require('buffer')
-let Buffer = buffer
+//let buffer = require('buffer')
+//let Buffer = buffer
+
+var colors = require('colors/safe');
 
 let chokidar
 if (hot) chokidar = require('chokidar') // for hot reloading
@@ -466,16 +468,16 @@ function wrap_module(name, code, exports, opts) {
   return '!function(){' + code + '}()'
 }
 
-function sandbox_module(mod_name, code, exports, opts) {
+function wrap_use_module(mod_name, code, exports, opts) {
   if (!opts.sloppy) {
     code = "'use strict';" + code
   }
   code += ';' +
-    exports.map(
-      (name) => ('$__modules.'+mod_name+'.exports.'+name+'='+name)
-    ).join(';') +
-    //';function __eval_here(code) { return eval(code) }' +
-    //";global['__eval_"+mod_name+"'] = __eval_here;"
+    /*exports.map(
+      (name) => ('$__modules["'+mod_name+'"].exports.'+name+'='+name)
+    ).join(';') +*/
+    ';function __eval_here(code) { return eval(code) }' +
+    ";$__modules['"+mod_name+"'].eval = __eval_here;" +
     //+log_code;
     ";function use(name){superglobal.use(name,global)}"
   //log(code)
@@ -534,6 +536,34 @@ function patch_exports(toks, patches) {
         exports.push( name )
         add_tok_patch(patches, tok, '')
         add_tok_patch(patches, tok.next, '')
+      }
+    }
+  }
+  return exports
+}
+
+
+function patch_use_exports(toks, patches) {
+  let exports = []
+  for (let tok of toks) {
+    if (is_id(tok) && tok.s=='export' && is_sp(tok.next)) {
+      let kw = tok.next.next.s
+      if (kw=='var' || kw=='let' || kw=='function' || kw=='fun') {
+        let name = tok.next.next.next.next.s
+        exports.push( name )
+        if (kw=='var' || kw=='let') {
+          add_tok_patch(patches, tok, 'global.'+name) // replace `export `
+          add_tok_patch(patches, tok.next, '') // replace sp
+          add_tok_patch(patches, tok.next.next, '') // replace kw
+          add_tok_patch(patches, tok.next.next.next, '') // replace sp
+          add_tok_patch(patches, tok.next.next.next.next, '') // replace name
+        } else { // fun
+          add_tok_patch(patches, tok, 'global.'+name+'=function') // replace `export `
+          add_tok_patch(patches, tok.next, '') // replace sp
+          add_tok_patch(patches, tok.next.next, '') // replace kw
+          add_tok_patch(patches, tok.next.next.next, '') // replace sp
+          add_tok_patch(patches, tok.next.next.next.next, '') // replace name
+        }
       }
     }
   }
@@ -678,6 +708,7 @@ function read_and_rewrite(fn, moduleName, opts) {
 }
 
 
+/*
 function prepare_module(fn, mod_name, opts) {
   //log('prepare_module '+fn)
   let code = read_and_curlify(fn)
@@ -690,22 +721,58 @@ function prepare_module(fn, mod_name, opts) {
   //patch_ifs(toks, patches)
   //patch_imports(toks, patches)
   //let imports = patch_imports(toks, patches)
-  let exports = patch_exports(toks, patches)
+  let exports = patch_use_exports(toks, patches)
   patch_seals(toks, patches)
   code = apply_tok_patches(code, patches)
-  code = sandbox_module(mod_name, code, exports, opts)
+  code = wrap_use_module(mod_name, code, exports, opts)
+  let mod = $__modules[mod_name]
   let sandbox = {
+    __mod: mod,
     __modname: mod_name,
-    $__modules: $__modules,
+    $__modules,
     process, console, require, __dirname,
   }
   sandbox.global = sandbox
   sandbox.superglobal = global
-  $__modules[mod_name].exports = {}
-  $__modules[mod_name].export_names = exports
+  mod.name = mod_name
+  mod.exports = {}
+  mod.export_names = exports
+  mod.context = sandbox
   return { code, sandbox, exports }
 }
+*/
 
+function prepare_module(fn, mod_name, opts) {
+  //log('prepare_module '+fn)
+  let code = read_and_curlify(fn)
+  let toks = tokenize(mod_name, code)
+  opts = opts ? opts : {}
+  //log(code)
+  //dumpTokens(toks)
+  let patches = []
+  //patch_fun(toks, patches)
+  //patch_ifs(toks, patches)
+  //patch_imports(toks, patches)
+  //let imports = patch_imports(toks, patches)
+  let exports = patch_use_exports(toks, patches)
+  patch_seals(toks, patches)
+  code = apply_tok_patches(code, patches)
+  code = wrap_use_module(mod_name, code, exports, opts)
+  let mod = $__modules[mod_name]
+  let sandbox = {
+    __mod: mod,
+    __modname: mod_name,
+    $__modules,
+    process, console, require, __dirname,
+  }
+  sandbox.global = sandbox
+  sandbox.superglobal = global
+  mod.name = mod_name
+  mod.exports = {}
+  mod.export_names = exports
+  mod.context = sandbox
+  return { code, sandbox, exports }
+}
 
 function findScript(fn) {
   log('v8debug: get scripts')
@@ -861,7 +928,17 @@ let include = global.include = module.exports = function(names, opts) {
   }
 }
 
+let superglobal = global
 global.$__modules = {}
+
+function mod_by_ctx(ctx) {
+  for (let mod_name in $__modules) {
+    let mod = $__modules[mod_name]
+    if (mod.context == ctx)
+      return mod
+  }
+  return null
+}
 
 global.use = function(names, ctx, opts) {
 
@@ -894,10 +971,10 @@ global.use = function(names, ctx, opts) {
 
   let parent_mod_name = ''
   if (ctx && ('__modname' in ctx)) {
-    log('parent mod name', ctx.__modname)
+    //log('parent mod name', ctx.__modname)
     parent_mod_name = ctx.__modname
   } else {
-    log('parent mod name (global)')
+    //log('parent mod name (global)')
   }
 
   if (typeof opts == 'undefined') opts = {}
@@ -981,13 +1058,82 @@ global.use = function(names, ctx, opts) {
       let parent_ctxs = $__modules[name].parent_contexts
       if (parent_ctxs.indexOf(ctx) < 0)
         parent_ctxs.push( ctx )
-      let mod_exports = $__modules[name].exports
+      let mod_exports = $__modules[name].export_names
       let i = 0;
       for (let parent_ctx of parent_ctxs) {
-        for (let exp_name in mod_exports) {
+        let parent_mod_name = parent_ctx.__modname
+        if (!parent_mod_name) parent_mod_name = '(global)'
+        for (let exp_name of mod_exports) {
+          /*let parent_mod = mod_by_ctx(parent_ctx)
+          if (parent_mod) parent_mod_name = parent_mod.name;
+          else parent_mod_name = '(global)'*/
+          //if (exp_name == 'buffer')
           //log("bind " + name + '.' + exp_name + ' to ' + (parent_mod_name?parent_mod_name:'(global)'))
-          log("bind " + name + '.' + exp_name + ' to ctx ' + i)
-          parent_ctx[exp_name] = mod_exports[exp_name]
+          //log("bind " + name + '.' + exp_name + ' to ctx ' + i)
+          //parent_ctx[exp_name] = mod_exports[exp_name]
+
+          //if (!(exp_name in parent_ctx)) {
+          //if (!Object.hasOwnProperty(parent_ctx, exp_name)) {
+          //if (  Object.keys(parent_ctx).indexOf(exp_name)<0  ) {
+            log(colors.green("bind ") + name + '.' + exp_name + ' to ' + parent_mod_name)
+            //log(colors.green("bind ") + name + '.' + exp_name + ' to ' + parent_mod_name+' val '+$__modules[name].context[exp_name])
+
+            Object.defineProperty(parent_ctx, exp_name, {
+              enumerable: true,
+              configurable: true,
+              /*configurable: false,
+              configurable: ' assert fs '.indexOf(' '+exp_name+' ')>=0,*/
+              get: function() {
+                console.log(colors.blue('read ')+name+'.'+exp_name+' from '+parent_mod_name)
+                //let val =  $__modules[name].context[exp_name];
+                let val = superglobal.$__modules[name].eval(exp_name);
+                console.log(colors.gray(''+val))
+                return val
+              },
+              set: function(val) {
+                console.log(colors.red('write ')+name+'.'+exp_name+colors.gray('='+val)+' from '+parent_mod_name)
+                //$__modules[name].context[exp_name] = val
+                superglobal.$__modules[name].context.__to_set = val
+                superglobal.$__modules[name].eval(exp_name+'=__to_set')
+              },
+            })
+
+            /*parent_ctx.__defineGetter__(exp_name, function() {
+              console.log(colors.blue('read ')+name+'.'+exp_name)
+              let val =  $__modules[name].eval(exp_name);
+              console.log(''+val)
+              return val
+            })
+            parent_ctx.__defineSetter__(exp_name, function(val) {
+              console.log(colors.red('write ')+name+'.'+exp_name+'='+val)
+              $__modules[name].context.__to_set = val
+              $__modules[name].eval(exp_name+'=__to_set')
+            })*/
+
+          //}
+
+          /*parent_ctx.__defineGetter__(exp_name, function() {
+            console.log(colors.blue('read ')+name+'.'+exp_name)
+            //return mod_exports[exp_name]
+            return $__modules[name].exports[exp_name]
+          })
+          parent_ctx.__defineSetter__(exp_name, function(val) {
+            console.log(colors.red('write ')+name+'.'+exp_name+'='+val)
+            //mod_exports[exp_name] = val;
+            $__modules[name].exports[exp_name] = val
+          })*/
+
+          /*parent_ctx.__defineGetter__(exp_name, function() {
+            console.log(colors.blue('read ')+name+'.'+exp_name)
+            //return mod_exports[exp_name]
+            return $__modules[name].exports[exp_name]
+          })
+          parent_ctx.__defineSetter__(exp_name, function(val) {
+            console.log(colors.red('write ')+name+'.'+exp_name+'='+val)
+            //mod_exports[exp_name] = val;
+            $__modules[name].exports[exp_name] = val
+          })*/
+
         }
         i++
       }

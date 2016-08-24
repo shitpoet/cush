@@ -10,7 +10,7 @@ on(window, 'keydown', fun(e){
     if name
       document.location.href = '/'+name
   elif e.altKey && k=='O'.charCodeAt(0)
-    window.open('#', '', {toolbar:false})
+    window.open('#', '', 'titlebar=no,toolbar=no,location=no,locationbar=no,menubar=no,personalbar=no,status=no')
   log(k, e)
 })
 

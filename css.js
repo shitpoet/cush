@@ -587,6 +587,7 @@ export let declAliases = {
   fr: 'float: right',
   fl: 'float: left',
   flex: 'display: flex',
+  fsa: 'display: flex; justify-content: space-around',
   fsb: 'display: flex; justify-content: space-between',
   fsbt: 'display: flex; justify-content: space-between; align-items: flex-start',
   fsbc: 'display: flex; justify-content: space-between; align-items: center',
