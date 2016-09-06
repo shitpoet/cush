@@ -13,19 +13,26 @@ fun clean_fonts(node, vars) {
   }
 }
 
-fun process_image_urls(decl) {
+fun process_image_urls(decl, vars) {
   let ss = decl.value.split(' ')
   //log(ss.join(' '))
   let zz = []
   for (let s of ss) {
     if (s.startsWith('url(')) {
-      if (s.startsWith('url(.') || s.startsWith('url(/')) {
-        // do nothing //
-      } else if (s.startsWith('url(img/')) {
-        s = 'url(../' + (s.substring('url('.length))
-      } else {
-        s = 'url(../img/' + (s.substring('url('.length))
-      }
+
+      if vars.wp_mode
+        l('wp mode img url rewrite')
+        if s.startsWith('url(../img/')
+          s = 'url(/' + s.substring('url(../'.length)
+
+      if s.startsWith('url(.') || s.startsWith('url(/')
+        ;// do nothing //
+      elif s.startsWith('url(img/')
+        //s = 'url(../' + (s.substring('url('.length))
+        s = 'url(/' + s.substring('url('.length)
+      else
+        //s = 'url(../img/' + (s.substring('url('.length))
+        s = 'url(/img/' + s.substring('url('.length)
     }
     zz.push(s)
   }
@@ -35,7 +42,7 @@ fun process_image_urls(decl) {
 
 fun process_links(node, vars) {
   if ('background' in node.decls) {
-    process_image_urls(node.decls.background)
+    process_image_urls(node.decls.background, vars)
   }
 }
 

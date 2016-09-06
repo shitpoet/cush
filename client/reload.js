@@ -61,13 +61,17 @@ function reloadStyle(path) {
   for (var i = 0; i < styles.length; i++) {
     var style = styles[i]
     var ref = style.href
-    //if (style.rel=='stylesheet' && ref.indexOf('style.css')>=0) {
-    if (style.rel=='stylesheet' && ref.indexOf(path)>=0) {
+    if (style.rel=='stylesheet' && ref.indexOf('/style.css')>=0) {
+    //if (style.rel=='stylesheet' && ref.indexOf(path)>=0) {
       ref1 = ref
       style1 = styles[i]
       break
     }
   }
+  if(!style) {
+    log('no style found, force full reload')
+    full_reload()
+    return }
   var style2 = document.createElement("link")
   var scrollPos = getScrollTop()
   var body = document.body
@@ -75,7 +79,7 @@ function reloadStyle(path) {
   console.log(ref)
   style2.rel = 'stylesheet'
   //style2.href = 'http://localhost:8888/style.css?'+(cssVer++)
-  ref = ref.split('__')[0]
+  ref = ref.split('__')[0].split('?')[0]
   style2.href = ref+'__v'+(Math.round(Math.random()*1000000000))
   //style2.href = 'http://localhost:8888/style.css?v'+(Math.round(Math.random()*1000000000))
   //head.replaceChild(style2, style1)
@@ -83,7 +87,8 @@ function reloadStyle(path) {
   head.appendChild(style2)
   var h = document.body.offsetHeight // trigger reflow - update styles
   //setTimeout(function(){
-  head.removeChild(style1)
+  //head.removeChild(style1)
+  style1.remove()
   var h2 = document.body.offsetHeight // trigger reflow - update styles
     /*setScrollTop(scrollPos)
   }, 200)*/

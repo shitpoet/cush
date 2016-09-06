@@ -1,6 +1,6 @@
 "use strict"
 
-let _logging = true
+let _logging = false
 function log(...args) {
   if (_logging) console.log(...args)
 }

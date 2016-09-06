@@ -137,18 +137,22 @@ export function respond(opts) {
     var fnparts = fn.split('.')
     var ext = fnparts.length >= 2 ? fn.split('.').pop() : ''
     if (!ext) ext = ''
-    var tplPath  = path+name+'.tpl'
-    var htmlPath = path+name+'.html'
-    var stlPath  = path+name+'.stl'
-    var cssPath  = path+name+'.css'
-    //log('tplPath',tplPath)
-    //log('htmlPath',htmlPath)
-    //log('stlPath',stlPath)
+    var tpl_path  = path+name+'.tpl'
+    var html_path = path+name+'.html'
+    var stl_path  = path+name+'.stl'
+    var css_path  = path+name+'.css'
+    //if css_path.indexOf('/stl/') > 0
+    if opts.wp_mode
+      css_path = 'style.css'
+    //log('tpl_path',tpl_path)
+    //log('html_path',html_path)
+    log('stl_path',stl_path)
+    log('css_path',css_path)
     //log('ext',ext)
-    if ((ext==''||ext=='html') && exists(tplPath)) {
+    if ((ext==''||ext=='html') && exists(tpl_path)) {
       var pageVars = {}
       if (ext=='') {
-        log('page '+tplPath)
+        log('page '+tpl_path)
         // execute page js script
         /*var svjsfn = name+'.js'
         if (exists(svjsfn)) {
@@ -160,15 +164,15 @@ export function respond(opts) {
           pageVars = require(fullsvjsfn).view()
         }*/
       } else {
-        log('template '+tplPath)
+        log('template '+tpl_path)
       }
-      //var tpl = pipeline.get(tplPath).source
+      //var tpl = pipeline.get(tpl_path).source
       var tpl
       res.writeHead(200, {"Content-Type": "text/html"})
       //log('---------------------------')
       //log(tpl)
       //log('---------------------------')
-      lastTplPath = tplPath
+      lastTplPath = tpl_path
       lastPageVars = pageVars
       try {
         /*if (render_opts.skip_php_tags) {
@@ -179,33 +183,34 @@ export function respond(opts) {
           tpl = tpl.split('<?').join('PHP_OPEN_TAG')
           tpl = tpl.split('?>').join('PHP_CLOSE_TAG')
         }*/
-        //tpl = renderTemplate(tplPath, tpl)
-        tpl = renderTemplate(tplPath, render_opts)
-        //tpl = view.render(tplPath, tpl, lastStlPath, lastStl, [projectInfo.vars, pageVars], render_opts).tpl
+        //tpl = renderTemplate(tpl_path, tpl)
+        tpl = renderTemplate(tpl_path, render_opts)
+        //tpl = view.render(tpl_path, tpl, lastStlPath, lastStl, [projectInfo.vars, pageVars], render_opts).tpl
 
         if opts.php_mode
           tpl = postprocess_php(tpl)
 
-        lastHtmls[tplPath] = tpl
+        lastHtmls[tpl_path] = tpl
         //lastHtml = tpl
 
-        if (opts.onSetLastError) opts.onSetLastError(tplPath, null)
+        if (opts.onSetLastError) opts.onSetLastError(tpl_path, null)
       } catch (e) {
         panic('catch tpl parse error')
         handle_error(e)
         if (e.stack) e = e.stack
         //panic(e)
-        tpl = lastHtmls[tplPath]
+        tpl = lastHtmls[tpl_path]
         if (!tpl) tpl = '<html></html>'
         tplParseError = e
         //sendParseErrors()
-        if (opts.onSetLastError) opts.onSetLastError(tplPath, e)
+        if (opts.onSetLastError) opts.onSetLastError(tpl_path, e)
       }
 
       //log(tpl)
 
       if opts.php_mode
-        htmlPath = htmlPath.replace('.html', '.php')
+        html_path = html_path.replace('.html', '.php')
+        // add reload code to output file
         if opts.live_reload {
           if (tpl.indexOf('</html>')>=0) { // attach autoreload script only once
             tpl += "<script>\n"
@@ -219,11 +224,11 @@ export function respond(opts) {
         }
 
       if opts.php_mode
-        fs.writeFileSync(htmlPath, tpl)
+        fs.writeFileSync(html_path, tpl)
       else
-        fs.writeFile(htmlPath, tpl)
+        fs.writeFile(html_path, tpl)
 
-      //log(opts);
+      // add reload code to output stream
       if opts.live_reload && !opts.php_mode {
 
         if (tpl.indexOf('</html>')>=0) { // attach autoreload script only once
@@ -239,37 +244,37 @@ export function respond(opts) {
 
       res.end(tpl)
 
-    } else if (ext=='css' && exists(stlPath)) {
+    } else if (ext=='css' && exists(stl_path)) {
     //} else if (pagename.startsWith('style.css')) {
-      log('style '+stlPath)
+      log('style '+stl_path)
       res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
       res.setHeader("Pragma", "no-cache"); // HTTP 1.0.
       res.setHeader("Expires", "0"); // Proxies.
       res.writeHead(200, {"Content-Type": "text/css"})
 
-      //var stl = pipeline.get(stlPath).source
+      //var stl = pipeline.get(stl_path).source
       var stl
-      lastStlPath = stlPath
+      lastStlPath = stl_path
       try {
-        //stl = view.render(lastTplPath, lastTpl, stlPath, stl, [projectInfo.vars, lastPageVars]).stl
-        //stl = renderStyle(stlPath, stl)
-        stl = renderStyle(stlPath)
-        lastCsss[stlPath] = stl
-        if (opts.onSetLastError) opts.onSetLastError(stlPath, null)
+        //stl = view.render(lastTplPath, lastTpl, stl_path, stl, [projectInfo.vars, lastPageVars]).stl
+        //stl = renderStyle(stl_path, stl)
+        stl = renderStyle(stl_path)
+        lastCsss[stl_path] = stl
+        if (opts.onSetLastError) opts.onSetLastError(stl_path, null)
       } catch(e) {
         panic('catch stl parse error')
         handle_error(e)
         //panic(e)
-        stl = lastCsss[stlPath]
+        stl = lastCsss[stl_path]
         if (e.stack) e = e.stack
         stlParseError = e
         //log('stlParseError',stlParseError)
         //sendParseErrors()
-        if (opts.onSetLastError) opts.onSetLastError(stlPath, e)
+        if (opts.onSetLastError) opts.onSetLastError(stl_path, e)
       }
       res.end(stl)
-      log('write',cssPath)
-      fs.writeFile(cssPath, stl)
+      log('write css',css_path)
+      fs.writeFile(css_path, stl)
     /*} else if (fn=='RELOAD.js') {
       res.writeHead(200, {"Content-Type": "text/javascript"})
       var code = ''

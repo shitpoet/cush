@@ -594,6 +594,7 @@ export let declAliases = {
   fsbb: 'display: flex; justify-content: space-between; align-items: flex-end',
   fjac: 'display: flex; justify-content: center; align-items: center',
   // g h
+  inline: 'display: inline',
   ib: 'display: inline-block',
   ibb: 'display: inline-block; vertical-align: bottom',
   ibt: 'display: inline-block; vertical-align: top',

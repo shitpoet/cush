@@ -2,13 +2,13 @@ var colors = require('colors/safe');
 
 let logging = {
   'include': false,
-
   'devserver': true,
   'parse': false,
   'pipeline': false,
   tplcompile: false,
   'log': true,
-  'response': false,
+  'response': true,
+  'use': false
 }
 
 export function get_stack() {

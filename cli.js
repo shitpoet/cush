@@ -23,8 +23,10 @@ if (argv.length == 1 && (argv[0]=='-h' || argv[0]=='--help')) {
   serverOpts.live_reload = argv.indexOf('r')>=0
   serverOpts.autoprefix = argv.indexOf('ap')>=0
   serverOpts.php_mode = argv.indexOf('php')>=0
+  serverOpts.wp_mode = argv.indexOf('wp')>=0
   if (serverOpts.live_reload) log('live reloading')
   if (serverOpts.autoprefix) log('autoprefixing')
   if (serverOpts.php_mode) log('php mode')
+  if (serverOpts.wp_mode) log('wp mode')
   devServer.listen(serverOpts)
 }
