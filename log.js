@@ -8,6 +8,7 @@ let logging = {
   tplcompile: false,
   'log': true,
   'response': true,
+  scin: false,
   'use': false
 }
 
