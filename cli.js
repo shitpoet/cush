@@ -1,7 +1,10 @@
 // parse command line and run tasks
 
 const fs = require('fs')
-require('./include')('common devserver')
+require('caught')
+require('slowmod')
+//use({fatal: true, restart:true})
+include('log common devserver')
 //var devServer = require('./devserver.js')
 //import {devServer} from './devserver.js'
 
@@ -30,3 +33,4 @@ if (argv.length == 1 && (argv[0]=='-h' || argv[0]=='--help')) {
   if (serverOpts.wp_mode) log('wp mode')
   devServer.listen(serverOpts)
 }
+

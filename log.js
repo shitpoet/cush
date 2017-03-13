@@ -1,7 +1,7 @@
 var colors = require('colors/safe');
 
 let logging = {
-  'include': false,
+  /*'include': false,
   'devserver': true,
   'parse': false,
   'pipeline': false,
@@ -9,7 +9,7 @@ let logging = {
   'log': true,
   'response': true,
   scin: false,
-  'use': false
+  'use': false*/
 }
 
 export function get_stack() {
