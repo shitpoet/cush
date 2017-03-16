@@ -1,20 +1,25 @@
-// parse command line and run tasks
+// boostrap module
+// parse command line, load project config and run
 
 const fs = require('fs')
-require('caught')
+let caught = require('caught')
+caught.opts.exitCode = 8
+global.handleError = caught.handleError
 require('slowmod')
-//use({fatal: true, restart:true})
-include('log common devserver')
-//var devServer = require('./devserver.js')
-//import {devServer} from './devserver.js'
+use({fatal: true, restart:true})
+include('log')
+include('ubiq')
+include('core/common')
+include('server/devserver')
+include('core/project')
 
-var argv = process.argv.slice(2)
+let argv = process.argv.slice(2)
 
 if (argv.length == 1 && (argv[0]=='-h' || argv[0]=='--help')) {
-  log('usage: cli r ap php')
+  log('usage: cli r ap php wp')
 } else {
-  var serverOpts = {
-    port: parseInt(projectInfo.port)
+  let serverOpts = {
+    port: parseInt(project.port)
   }
   /*for (var i = 0; i < argv.length; i++) {
     var num = parseInt(argv[i])
@@ -23,14 +28,14 @@ if (argv.length == 1 && (argv[0]=='-h' || argv[0]=='--help')) {
       break
     }
   }*/
-  serverOpts.live_reload = argv.indexOf('r')>=0
+  serverOpts.liveReload = argv.indexOf('r')>=0
   serverOpts.autoprefix = argv.indexOf('ap')>=0
-  serverOpts.php_mode = argv.indexOf('php')>=0
-  serverOpts.wp_mode = argv.indexOf('wp')>=0
-  if (serverOpts.live_reload) log('live reloading')
+  serverOpts.phpMode = argv.indexOf('php')>=0
+  serverOpts.wpMode = argv.indexOf('wp')>=0
+  if (serverOpts.liveReload) log('live reloading')
   if (serverOpts.autoprefix) log('autoprefixing')
-  if (serverOpts.php_mode) log('php mode')
-  if (serverOpts.wp_mode) log('wp mode')
+  if (serverOpts.phpMode) log('php mode')
+  if (serverOpts.wpMode) log('wp mode')
   devServer.listen(serverOpts)
 }
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 restart=true
-while $restart
-do
+#while $restart
+#do
   #debug_port=$((1000+RANDOM))
   #node /home/ors/lab/cush/server.js "$@"
   #node /home/ors/lab/cush/devserver.js "$@"
@@ -11,11 +11,21 @@ do
   node --harmony_shipping ~/dev/cush/cli.js "$@"
   #node-debug --harmony --harmony_destructuring_assignment --expose_debug_as=v8debug ~/lab/cush/cli.js "$@"
   OUT=$?
-  echo "exit code: $OUT"
-  if [ $OUT -eq 5 ];then
-    restart=true
+  echo "cush server exit code: $OUT"
+  #if [ $OUT -eq 8 ];then
+  if [ $OUT -eq 143 ];then
+    echo '---------- reset --------------'
+    . $0 "$@"
   else
-    restart=false
+
+    #################################
+    echo '---------- wait... --------------'
+    inotifywait -qq  -e modify $0 ~/dev/cush/** ~/dev/cush/server/** ~/dev/cush/server/responders/** ~/mod/**
+
+    echo '---------- restart --------------'
+    . $0 "$@"
+  #else
+    #restart=false
   fi
-done
+#done
 
